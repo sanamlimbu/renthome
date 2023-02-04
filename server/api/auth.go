@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"renthome/boiler"
 
@@ -125,7 +126,6 @@ func (api *APIController) GoogleLoginHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		http.Error(w, "Unable to decode Google login request.", http.StatusBadRequest)
 	}
-
 }
 
 func (api *APIController) FacebookLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +134,6 @@ func (api *APIController) FacebookLoginHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		http.Error(w, "Unable to decode Facebook login request.", http.StatusBadRequest)
 	}
-
 }
 
 func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +142,6 @@ func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		http.Error(w, "Unable to decode Apple login request.", http.StatusBadRequest)
 	}
-
 }
 
 func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -153,25 +151,31 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		http.Error(w, "Unable to decode email signup request.", http.StatusBadRequest)
+		return
 	}
 
 	if req.Email == "" {
 		http.Error(w, "Email is required.", http.StatusBadRequest)
+		return
 	}
 
 	if req.Password == "" {
 		http.Error(w, "Password is required.", http.StatusBadRequest)
+		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 8)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, genericErrMsg, http.StatusInternalServerError)
+		return
 	}
 
 	// begin transaction
 	ctx := context.Background()
 	tx, err := api.Conn.BeginTx(ctx, nil)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, genericErrMsg, http.StatusInternalServerError)
 		return
 	}
@@ -181,6 +185,7 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 	}
 	err = user.Insert(api.Conn, boil.Infer())
 	if err != nil {
+		log.Println(err)
 		http.Error(w, genericErrMsg, http.StatusInternalServerError)
 		return
 	}
@@ -190,12 +195,14 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 	}
 	err = passwordHash.Insert(api.Conn, boil.Infer())
 	if err != nil {
+		log.Println(err)
 		http.Error(w, genericErrMsg, http.StatusInternalServerError)
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		log.Println(err)
 		http.Error(w, genericErrMsg, http.StatusInternalServerError)
 		return
 	}
