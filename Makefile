@@ -61,14 +61,14 @@ go-mod-tidy:
 go-mod-download:
 	cd server && go mod download
 
-.PHONY: tools-darwin
-tools-darwin: go-mod-tidy
-	@mkdir -p $(BIN)
-	cd server && go generate -tags tools ./tools/...
+.PHONY: dev-tools
+dev-tools: go-mod-tidy
+	@mkdir -p $(BIN) 
+	cd $(SERVER) && go generate -tags devtools ./tools/...
 
 .PHONY: serve
 serve:
-	${BIN}/air -c ./server/.air.toml
+	cd $(SERVER) && ../bin/air -c .air.toml
 
 .PHONY: web-watch
 web-watch:
