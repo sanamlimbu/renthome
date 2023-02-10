@@ -2,6 +2,7 @@ import { Button, Divider, Link, TextField, Typography } from "@mui/material";
 import Card from "@mui/material/Card";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 import Privacy from "../components/privacy";
 import RentHomeLogo from "../components/rentHomeLogo";
 import Social, { SocialAction, socialList } from "../components/social";
@@ -13,6 +14,9 @@ interface ILoginInput {
 }
 
 export default function LoginPage() {
+  const location = useLocation();
+  let from = ((location.state as any)?.from?.pathname as string) || "/";
+
   const {
     handleSubmit,
     register,
@@ -77,7 +81,12 @@ export default function LoginPage() {
         </Link>
         <Divider sx={{ fontWeight: "700" }}>OR</Divider>
         {socialList.map((s) => (
-          <Social key={s.name} type={s} action={SocialAction.signin} />
+          <Social
+            key={s.name}
+            type={s}
+            action={SocialAction.signin}
+            from={from}
+          />
         ))}
         <Typography textAlign={"center"}>
           Not signed up?{" "}

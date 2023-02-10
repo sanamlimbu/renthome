@@ -1,0 +1,5 @@
+// OAuth
+export const GOOGLE_CLIENT_ID = process.env.REACT_APP_RENTHOME_GOOGLE_CLIENT_ID;
+export const GOOGLE_REDIRECT_URI =
+  process.env.REACT_APP_RENTHOME_GOOGLE_REDIRECT_URI || "";
+export const API_ADDRESS = process.env.REACT_APP_RENTHOME_API_ADDR;

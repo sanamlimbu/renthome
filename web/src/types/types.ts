@@ -68,3 +68,8 @@ export interface Role {
   updatedAt: Date;
   deletedAt: Date;
 }
+
+export interface GoogleAuthRequest {
+  code: string;
+  redirect_uri: string;
+}

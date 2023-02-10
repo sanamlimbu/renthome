@@ -1,10 +1,20 @@
-import { Button, Divider, Link, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Divider,
+  Link,
+  Snackbar,
+  TextField,
+  Typography,
+} from "@mui/material";
 import Card from "@mui/material/Card";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useLocation, useNavigate } from "react-router-dom";
 import Privacy from "../components/privacy";
 import RentHomeLogo from "../components/rentHomeLogo";
 import Social, { SocialAction, socialList } from "../components/social";
+import { API_ADDRESS } from "../config";
 import "../styles/index.css";
 
 interface ISignupInput {
@@ -13,6 +23,12 @@ interface ISignupInput {
 }
 
 export default function SignupPage() {
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const location = useLocation();
+  let from = ((location.state as any)?.from?.pathname as string) || "/";
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     register,
@@ -20,8 +36,40 @@ export default function SignupPage() {
   } = useForm<ISignupInput>();
   const [open, setOpen] = React.useState(false);
 
-  const onSubmit: SubmitHandler<ISignupInput> = (data) => {
-    console.log(data);
+  const onSubmit: SubmitHandler<ISignupInput> = async (input) => {
+    try {
+      const res = await fetch(`${API_ADDRESS}/api/auth/email-signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message);
+        setSnackbarOpen(true);
+      } else {
+        setSnackbarOpen(false);
+        navigate("/");
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleSnackbarClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackbarOpen(false);
   };
 
   return (
@@ -80,7 +128,12 @@ export default function SignupPage() {
         </Typography>
         <Divider sx={{ fontWeight: "700" }}>OR</Divider>
         {socialList.map((s) => (
-          <Social key={s.name} type={s} action={SocialAction.signin} />
+          <Social
+            key={s.name}
+            type={s}
+            action={SocialAction.signin}
+            from={from}
+          />
         ))}
         <Divider />
         <Typography
@@ -91,6 +144,19 @@ export default function SignupPage() {
         </Typography>
       </Card>
       <Privacy open={open} handleClose={() => setOpen(false)} />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error || "Something went wrong, unable to signup."}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

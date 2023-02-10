@@ -33,7 +33,7 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{adminHostURL, publicHostURL},
+		AllowedOrigins:   []string{adminHostURL, publicHostURL, api.Auther.GoogleConfig.GoogleRedirectURILogin, "http://localhost:8000"},
 		AllowCredentials: true,
 	}))
 
@@ -44,19 +44,17 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/api", func(r chi.Router) {
-
-	})
-	r.Route(("/auth"), func(r chi.Router) {
-		r.Post("/email-login", api.EmailLoginHandler)
-		r.Post("/facebook-login", api.FacebookLoginHandler)
-		r.Post("/apple-login", api.AppleLoginHandler)
-		r.Post("/google-login", api.GoogleLoginHandler)
-		r.Post("/email-signup", api.EmailSignUpHandler)
-		r.Post("/facebook-signup", api.FacebookSignUpHandler)
-		r.Post("/google-signup", api.GoogleSignUpHandler)
-		r.Post("/apple-signup", api.AppleSignUpHandler)
-		r.Post("/forget-password", api.forgetPasswordHandler)
-		r.Post("/change-password", api.changePasswordHandler)
+		r.Group(func(r chi.Router) {
+			r.Route(("/auth"), func(r chi.Router) {
+				r.Post("/login", api.EmailLoginHandler)
+				r.Post("/signup", WithError(api.EmailSignUpHandler))
+				r.Post("/facebook", api.FacebookLoginHandler)
+				r.Post("/google", WithError(api.GoogleAuthHandler))
+				r.Post("/apple", api.AppleLoginHandler)
+				r.Post("/forget-password", api.forgetPasswordHandler)
+				r.Post("/change-password", api.changePasswordHandler)
+			})
+		})
 	})
 
 	return r

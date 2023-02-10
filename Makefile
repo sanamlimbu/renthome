@@ -70,6 +70,10 @@ dev-tools: go-mod-tidy
 serve:
 	cd $(SERVER) && ../bin/air -c .air.toml
 
+.PHONY: web-install
+web-install:
+	cd web/ && npm install
+
 .PHONY: web-watch
 web-watch:
 	cd web/ && npm run start

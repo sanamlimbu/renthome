@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ForgotPasswordPage from "./pages/forgotPassword";
+import GoogleAuthRedirectPage from "./pages/googleAuth";
 import HomePage from "./pages/home";
 import LoginPage from "./pages/login";
 import RentPage from "./pages/rentPage";
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
   {
     path: "rent",
     element: <RentPage />,
+  },
+  {
+    path: "/oauth/google",
+    element: <GoogleAuthRedirectPage />,
   },
 ]);
 

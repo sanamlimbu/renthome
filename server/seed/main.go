@@ -176,7 +176,7 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 
 	// Insert superadmin
 	superAdmin := &boiler.User{
-		Name:        "Sanam Limbu",
+		Name:        "Super Admin",
 		Email:       null.StringFrom("superadmin@example.com"),
 		Title:       null.StringFrom("Developer"),
 		Description: null.StringFrom("Developer of renthome.com"),
