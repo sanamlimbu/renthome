@@ -65,8 +65,6 @@ func main() {
 					&cli.StringFlag{Name: "jwtsecret", Value: "a35eab71-f691-4dc3-98e5-980bda774fa0", EnvVars: []string{"RENTHOME_USERAUTH_JWTSECRET"}, Usage: "JWT secret"},
 					&cli.StringFlag{Name: "google_client_id", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_ID"}, Usage: "Google Client ID for OAuth functionaility."},
 					&cli.StringFlag{Name: "google_client_secret", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_SECRET"}, Usage: "Google Client Secret for OAuth functionaility."},
-					&cli.StringFlag{Name: "google_redirect_uri_login", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_REDIRECT_URI_LOGIN"}, Usage: "Google redirect uri for login OAuth functionaility."},
-					&cli.StringFlag{Name: "google_redirect_uri_signup", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_REDIRECT_URI_SIGNUP"}, Usage: "Google redirect uri for signup OAuth functionaility."},
 					&cli.StringFlag{Name: "facebook_client_id", Value: "", EnvVars: []string{"RENTHOME_FACEBOOK_CLIENT_ID"}, Usage: "Facebook Client ID for OAuth functionaility."},
 					&cli.StringFlag{Name: "apple_client_id", Value: "", EnvVars: []string{"RENTHOME_APPLE_CLIENT_ID"}, Usage: "Apple Client ID for OAuth functionaility."},
 					&cli.BoolFlag{Name: "cookie_secure", Value: false, EnvVars: []string{"RENTHOME_COOKIE_SECURE"}, Usage: "Cookie Secure setting option for secure cookies."},
@@ -120,9 +118,6 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	cookieSecure := ctxCLI.Bool("cookie_secure")
 
 	googleClientID := ctxCLI.String("google_client_id")
-	googleClientSecret := ctxCLI.String("google_client_secret")
-	googleRedirectURILogin := ctxCLI.String("google_redirect_uri_login")
-	googleRedirectURIDSignup := ctxCLI.String("google_redirect_uri_signup")
 
 	facebookClientID := ctxCLI.String("facebook_client_id")
 	appleClientID := ctxCLI.String("apple_client_id")
@@ -146,14 +141,7 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 
 	mailer := email.NewMailer(mailUsername, mailPassword, mailHost, mailPort)
 
-	googleConfig := &api.GoogleConfig{
-		GoogleClientID:          googleClientID,
-		GoogleClientSecret:      googleClientSecret,
-		GoogleRedirectURILogin:  googleRedirectURILogin,
-		GoogleRedirectURISignup: googleRedirectURIDSignup,
-	}
-
-	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleConfig, facebookClientID, appleClientID)
+	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID, appleClientID)
 
 	// db connection
 	conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version, databaseMaxIdleConns, databaseMaxOpenConns)
@@ -169,8 +157,6 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 		Addr:    apiController.Addr,
 		Handler: router,
 	}
-
-	fmt.Println(server.Addr)
 
 	return server.ListenAndServe()
 }

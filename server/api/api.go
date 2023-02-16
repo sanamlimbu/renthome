@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"renthome/email"
 	"time"
 
@@ -31,10 +32,13 @@ func NewAPIController(mailer *email.Mailer, addr string, auther *Auther, conn *s
 func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux {
 	r := chi.NewRouter()
 
+	fmt.Println(publicHostURL)
+
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{adminHostURL, publicHostURL, api.Auther.GoogleConfig.GoogleRedirectURILogin, "http://localhost:8000"},
+		AllowedOrigins:   []string{adminHostURL, publicHostURL},
 		AllowCredentials: true,
+		AllowedHeaders:   []string{"*"},
 	}))
 
 	r.Use(middleware.RequestID)
@@ -46,13 +50,14 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 	r.Route("/api", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Route(("/auth"), func(r chi.Router) {
-				r.Post("/login", api.EmailLoginHandler)
+				r.Post("/login", WithError(api.EmailLoginHandler))
 				r.Post("/signup", WithError(api.EmailSignUpHandler))
 				r.Post("/facebook", api.FacebookLoginHandler)
 				r.Post("/google", WithError(api.GoogleAuthHandler))
 				r.Post("/apple", api.AppleLoginHandler)
 				r.Post("/forget-password", api.forgetPasswordHandler)
 				r.Post("/change-password", api.changePasswordHandler)
+				r.Post("/logout", WithError(api.LogoutHandler))
 			})
 		})
 	})

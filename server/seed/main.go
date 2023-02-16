@@ -75,9 +75,9 @@ func main() {
 					g.Add(run.SignalHandler(ctx, os.Interrupt))
 					// start the seed
 					g.Add(func() error { return SeedFunc(c, ctx) }, func(err error) {
-						if err != nil {
-							fmt.Println(terror.Echo(err))
-						}
+						// if err != nil {
+						// 	fmt.Println(terror.Echo(err))
+						// }
 						cancel()
 					})
 

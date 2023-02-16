@@ -1,15 +1,12 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"renthome/boiler"
 	"strings"
 	"time"
@@ -21,8 +18,27 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const GoogleOAuthTokenRootURL = "https://oauth2.googleapis.com/token"
-const GoogleOAuthUserInfoRootURL = "https://www.googleapis.com/oauth2/v1/userinfo"
+const GoogleOAuthTokenURL = "https://oauth2.googleapis.com/token"
+const GoogleOAuthUserURL = "https://www.googleapis.com/oauth2/v1/userinfo"
+const GoogleOAuthRedirectURI = "http://localhost:8000/api/auth/google"
+
+const ErrDecodeJSONPayload = "Unable to decode JSON payload."
+const ErrBeginTransaction = "Unable to begin transaction."
+const ErrCommitTransaction = "Unable to commit transaction."
+const ErrEncodeJSONPayload = "Unable to encode JSON payload."
+const ErrJWTAccessToken = "Unable to generate JWT access token."
+const ErrPasswordHash = "Unable to generate password hash."
+const ErrSomethingWentWrong = "Something went wrong, please try again."
+const ErrMissAuthToken = "Missing authorization token."
+const ErrInvalidToken = "Invalid token."
+
+type Role string
+
+const (
+	Member  Role = "MEMBER"
+	Manager Role = "MANAGER"
+	Admin   Role = "ADMIN"
+)
 
 // Auther to handle JWT authentication
 type Auther struct {
@@ -31,24 +47,17 @@ type Auther struct {
 	CookieSecure     bool
 	FacebookClientID string
 	AppleClientID    string
-	GoogleConfig     *GoogleConfig
+	GoogleClientID   string
 }
 
-type GoogleConfig struct {
-	GoogleClientID          string
-	GoogleClientSecret      string
-	GoogleRedirectURILogin  string
-	GoogleRedirectURISignup string
-}
-
-func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleConfig *GoogleConfig, facebookClientID string, appleClientID string) *Auther {
+func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleClientID string, facebookClientID string, appleClientID string) *Auther {
 	result := &Auther{
 		TokenExpiryDays:  tokenExpiryDays,
 		JWTSecretByte:    []byte(jwtSecret),
 		CookieSecure:     cookieSecure,
 		FacebookClientID: facebookClientID,
 		AppleClientID:    appleClientID,
-		GoogleConfig:     googleConfig,
+		GoogleClientID:   googleClientID,
 	}
 	return result
 }
@@ -56,163 +65,109 @@ func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleC
 type EmailLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	AuthType string `json:"auth_type"`
+}
+
+type EmailLoginResponse struct {
+	User  boiler.User `json:"user"`
+	Token string      `json:"token"`
 }
 
 type EmailSignUpRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	AuthType string `json:"auth_type"`
 }
 
-func (api *APIController) EmailLoginHandler(w http.ResponseWriter, r *http.Request) {
-	//ctx := context.Background()
-
-	req := &EmailLoginRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		http.Error(w, "Unable to decode email login request.", http.StatusBadRequest)
-	}
-
-	if req.Email == "" {
-		http.Error(w, "Email is required.", http.StatusBadRequest)
-	}
-
-	if req.Password == "" {
-		http.Error(w, "Password is required.", http.StatusBadRequest)
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 8)
-	if err != nil {
-		http.Error(w, "Something went wrong, unable to login", http.StatusInternalServerError)
-	}
-
-	fmt.Print(hash)
-
-	// begin transaction
-	//tx, err := api.Conn.BeginTx(ctx, nil)
-
-	// user := boiler.User{
-	// 	Email: req.Email,
-	// }
-
-	// passwordHash := boiler.PasswordHash{
-	// 	PasswordHash: hash,
-	// }
-
-}
-
-type GoogleOAuthToken struct {
-	AccessToken string
-	TokenID     string
+type EmailSignUpResponse struct {
+	User  boiler.User `json:"user"`
+	Token string      `json:"token"`
 }
 
 type GoogleUser struct {
-	ID         string
-	Email      string
-	Verified   bool
-	Name       string
-	GivenName  string
-	FamilyName string
-	Picture    string
-	Locale     string
-}
-type GoogleAuthRequest struct {
-	Code        string `json:"code"`
-	RedirectURI string `json:"redirect_uri"`
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
 }
 
-// GoogleAuthHandler handles Google login and signup
-func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Request) (int, error) {
-	// get Google authorization code
-	// code := r.URL.Query().Get("code")
-	// if code == "" {
-	// 	http.Error(w, "Missing authorization code.", http.StatusUnauthorized)
-	// 	return
-	// }
+type GoogleAuthResponse struct {
+	User  boiler.User `json:"user"`
+	Token string      `json:"token"`
+}
 
-	req := &GoogleAuthRequest{}
+func (api *APIController) EmailLoginHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &EmailLoginRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Unable to parse JSON payload.")
-	}
-	fmt.Println(req.Code)
-	fmt.Println(req.RedirectURI)
-
-	accessToken, err := GetGoogleOAuthToken(
-		api.Auther.GoogleConfig.GoogleClientID,
-		api.Auther.GoogleConfig.GoogleClientSecret,
-		req.RedirectURI,
-		req.Code)
-
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Unable to retrieve Google OAuth token.")
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
-	googleUser, err := GetGoogleUser(accessToken)
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Unable to retrieve Google user info.")
+	if req.Email == "" {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("email is required"), "Email is required.")
+	}
+
+	if req.Password == "" {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("password is required"), "Password is required.")
 	}
 
 	// begin transaction
 	ctx := context.Background()
 	tx, err := api.Conn.BeginTx(ctx, nil)
 	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to begin transaction.")
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
 	}
 
-	// check user with Google ID
-	user, err := boiler.Users(
-		boiler.UserWhere.Email.EQ(null.StringFrom(googleUser.ID))).One(tx)
+	user, err := boiler.Users(boiler.UserWhere.Email.EQ(null.StringFrom(strings.ToLower(req.Email)))).One(tx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("user not available"), "User not available, please sign up.")
+	}
 
-	if err == sql.ErrNoRows {
-		user.GoogleID = null.StringFrom(googleUser.ID)
-		user.Email = null.StringFrom(strings.ToLower(googleUser.Email))
-		user.Role = "MEMBER"
-		user.Name = googleUser.Name
-		user.IsVerified = true
+	if user == nil {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("user not available"), "User not available, please sign up.")
+	}
 
-		err := user.Insert(tx, boil.Infer())
-		if err != nil {
-			return http.StatusBadRequest, terror.Error(err, "Unable to create user.")
-		}
+	passwordHash, err := boiler.FindPasswordHash(tx, user.ID)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash.PasswordHash), []byte(req.Password))
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
+	}
+
+	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	resp := &EmailLoginResponse{
+		User:  *user,
+		Token: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to commit transaction.")
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
 	}
 
-	err = json.NewEncoder(w).Encode(user)
-	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to encode JSON.")
-	}
+	return http.StatusOK, nil
 
-	return http.StatusCreated, nil
-
-}
-
-func (api *APIController) FacebookLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// req := &FacebookLoginRequest{}
-	// err := json.NewDecoder(r.Body).Decode(req)
-	// if err != nil {
-	// 	http.Error(w, "Unable to decode Facebook login request.", http.StatusBadRequest)
-	// }
-}
-
-func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// req := &AppleLoginRequest{}
-	// err := json.NewDecoder(r.Body).Decode(req)
-	// if err != nil {
-	// 	http.Error(w, "Unable to decode Apple login request.", http.StatusBadRequest)
-	// }
 }
 
 func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &EmailSignUpRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Unable to parse JSON payload.")
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
 	if req.Email == "" {
@@ -227,21 +182,25 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 	ctx := context.Background()
 	tx, err := api.Conn.BeginTx(ctx, nil)
 	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to begin transaction.")
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
 	}
 
 	// user with email already exists
-	user, _ := boiler.Users(
+	user, err := boiler.Users(
 		boiler.UserWhere.Email.EQ(null.StringFrom(strings.ToLower(req.Email))),
 	).One(tx)
 
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
 	if user != nil {
-		return http.StatusBadRequest, terror.Error(err, "User already exists, please login.")
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("user already exists"), "User already exists, please login.")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 8)
 	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Unable to generate password hash.")
+		return http.StatusBadRequest, terror.Error(err, ErrPasswordHash)
 	}
 
 	user = &boiler.User{
@@ -263,17 +222,140 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 		return http.StatusBadRequest, terror.Error(err, "Unable to create password hash.")
 	}
 
-	err = tx.Commit()
+	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
 	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to commit transaction.")
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
 
-	err = json.NewEncoder(w).Encode(user)
+	resp := &EmailSignUpResponse{
+		User:  *user,
+		Token: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		return http.StatusInternalServerError, terror.Error(err, "Unable to encode JSON.")
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
 	}
 
 	return http.StatusCreated, nil
+}
+
+// GoogleAuthHandler handles Google login and signup
+func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &GoogleUser{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	// begin transaction
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	user := &boiler.User{}
+	// check user with Google ID
+	userAlt, err := boiler.Users(boiler.UserWhere.GoogleID.EQ(null.StringFrom(req.Sub))).One(tx)
+	// no user
+	if errors.Is(err, sql.ErrNoRows) {
+		user := &boiler.User{
+			GoogleID:   null.StringFrom(req.Sub),
+			Email:      null.StringFrom(strings.ToLower(req.Email)),
+			Role:       "MEMBER",
+			Name:       req.Name,
+			IsVerified: true,
+		}
+
+		err := user.Insert(tx, boil.Infer())
+		if err != nil {
+			return http.StatusBadRequest, terror.Error(err, "Unable to create user.")
+		}
+
+	}
+
+	if userAlt != nil {
+		user = userAlt
+	}
+
+	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	resp := &GoogleAuthResponse{
+		User:  *user,
+		Token: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
+	}
+
+	return http.StatusCreated, nil
+
+}
+
+type LogoutRequest struct {
+	UserID string `json:"user_id"`
+}
+
+// handles logout operation
+func (api *APIController) LogoutHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &LogoutRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	token, err := GetJWTAccessToken(authHeader)
+	if err != nil {
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	userID, err := GetUserIDFromToken(token, api.Auther.JWTSecretByte)
+	if err != nil || userID == "" {
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("invalid token"), ErrInvalidToken)
+	}
+
+	if req.UserID != userID {
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("unauthorized action"), "You are not authorized to perform this action.")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (api *APIController) FacebookLoginHandler(w http.ResponseWriter, r *http.Request) {
+	// req := &FacebookLoginRequest{}
+	// err := json.NewDecoder(r.Body).Decode(req)
+	// if err != nil {
+	// 	http.Error(w, "Unable to decode Facebook login request.", http.StatusBadRequest)
+	// }
+}
+
+func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Request) {
+	// req := &AppleLoginRequest{}
+	// err := json.NewDecoder(r.Body).Decode(req)
+	// if err != nil {
+	// 	http.Error(w, "Unable to decode Apple login request.", http.StatusBadRequest)
+	// }
 }
 
 func (api *APIController) FacebookSignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -296,114 +378,21 @@ func (api *APIController) changePasswordHandler(w http.ResponseWriter, r *http.R
 
 }
 
-// GetGoogleOAuthToken retrieves access token, this token grants temporary, limited access to a Google API on behalf of an end-user
-func GetGoogleOAuthToken(clientID string, clientSecret string, redirectURI string, code string) (*GoogleOAuthToken, error) {
-	values := url.Values{}
-
-	values.Add("grant_type", "authorization_code")
-	values.Add("code", code)
-	values.Add("client_id", clientID)
-	values.Add("client_secret", clientSecret)
-	values.Add("redirect_uri", redirectURI)
-
-	query := values.Encode()
-
-	req, err := http.NewRequest("POST", GoogleOAuthTokenRootURL, bytes.NewBufferString(query))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	client := http.Client{
-		Timeout: time.Second * 30,
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(res.StatusCode)
-
-	if res.StatusCode != http.StatusOK {
-		return nil, terror.Error(fmt.Errorf("Unable to retrieve Google access token"))
-	}
-
-	resBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var GoogleOauthTokenRes map[string]interface{}
-
-	if err := json.Unmarshal(resBody, &GoogleOauthTokenRes); err != nil {
-		return nil, err
-	}
-
-	token := &GoogleOAuthToken{
-		AccessToken: GoogleOauthTokenRes["access_token"].(string),
-		TokenID:     GoogleOauthTokenRes["id_token"].(string),
-	}
-
-	return token, nil
+type Claims struct {
+	UserID string `json:"user_id"`
+	jwt.StandardClaims
 }
 
-// GetGoogleUser retireves user informatiom from Google API using the access token
-func GetGoogleUser(token *GoogleOAuthToken) (*GoogleUser, error) {
-	url := fmt.Sprintf("%s?alt=json&access_token=%s", GoogleOAuthUserInfoRootURL, token.AccessToken)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.TokenID))
-
-	client := http.Client{
-		Timeout: time.Second * 30,
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("could not retrieve user")
-	}
-
-	resBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var GoogleUserRes map[string]interface{}
-
-	if err := json.Unmarshal(resBody, &GoogleUserRes); err != nil {
-		return nil, err
-	}
-
-	googleUser := &GoogleUser{
-		ID:        GoogleUserRes["id"].(string),
-		Email:     GoogleUserRes["email"].(string),
-		Verified:  GoogleUserRes["verified_email"].(bool),
-		Name:      GoogleUserRes["name"].(string),
-		GivenName: GoogleUserRes["given_name"].(string),
-		Picture:   GoogleUserRes["picture"].(string),
-		Locale:    GoogleUserRes["locale"].(string),
-	}
-
-	return googleUser, nil
-}
-
-// func (api *APIController) GetUserByGoogleID() (*boiler.User, error) {
-// 	boiler.FindUser(api.Conn,)
-// }
-
-func GenerateJWTAccessToken(user boiler.User, jwtSecret []byte) (string, error) {
-	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256, jwt.MapClaims{
-			"userID": user.ID,
+func GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, error) {
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+			Issuer:    "go-jwt-auth",
 		},
+	}
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256, claims,
 	)
 
 	tokenString, err := token.SignedString(jwtSecret)
@@ -412,4 +401,78 @@ func GenerateJWTAccessToken(user boiler.User, jwtSecret []byte) (string, error) 
 	}
 
 	return tokenString, nil
+}
+
+func GetJWTAccessToken(authHeader string) (string, error) {
+
+	// Split the Authorization header into its parts
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return "", terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+	// Get the token from the Authorization header
+	token := parts[1]
+
+	if token == "" {
+		return "", terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	return token, nil
+}
+
+// verifies token
+func VerfiyJWTAccessToken(tokenString string, jwtSecret []byte) (bool, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, terror.Error(fmt.Errorf("invalid signing method"), "Invalid signing method.")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return false, terror.Error(fmt.Errorf("invalid token signature"), "Invalid token signature.")
+		}
+		return false, err
+	}
+
+	// Verify the token expiry
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		if claims.ExpiresAt < time.Now().Unix() {
+			return false, terror.Error(fmt.Errorf("token has expired"), "Token has expired.")
+		}
+		return true, nil
+	} else {
+		return false, terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
+	}
+
+}
+
+// verifies token and returns user id
+func GetUserIDFromToken(tokenString string, jwtSecret []byte) (string, error) {
+	// Parse the token and extract the claims
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, terror.Error(fmt.Errorf("invalid signing method"), "Invalid signing method.")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return "", terror.Error(fmt.Errorf("invalid token signature"), "Invalid token signature.")
+		}
+		return "", err
+	}
+
+	// Verify the token expiry and return user id
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		if claims.ExpiresAt < time.Now().Unix() {
+			return "", terror.Error(fmt.Errorf("token has expired"), "Token has expired.")
+		}
+		return claims.UserID, nil
+	}
+
+	return "", terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
+
 }

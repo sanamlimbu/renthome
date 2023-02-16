@@ -16,10 +16,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useContext } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import NavBar from "../components/navBar";
 import Property from "../components/property";
+import { UserContext } from "../context/user";
 
 interface IFormInput {
   suburb: string;
@@ -38,6 +38,7 @@ interface IFormInput {
 }
 
 export default function HomePage() {
+  const { user } = useContext(UserContext);
   const [filterType, setFilterType] = React.useState("Rent");
   const [searchType, setSearchType] = React.useState("Rent");
 
@@ -75,7 +76,6 @@ export default function HomePage() {
 
   return (
     <>
-      <NavBar />
       {/**
        * Search box
        */}
@@ -118,6 +118,7 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: searchType === "Rent" ? "2px solid blue" : "",
+                textDecoration: searchType === "Rent" ? "none !important" : "",
               }}
               onClick={() => setSearchType("Rent")}
             >
@@ -131,6 +132,7 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: searchType === "Sold" ? "2px solid blue" : "",
+                textDecoration: searchType === "Sold" ? "none !important" : "",
               }}
               onClick={() => setSearchType("Sold")}
             >
@@ -144,6 +146,8 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: searchType === "Address" ? "2px solid blue" : "",
+                textDecoration:
+                  searchType === "Address" ? "none !important" : "",
               }}
               onClick={() => setSearchType("Address")}
             >
@@ -157,6 +161,8 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: searchType === "Agents" ? "2px solid blue" : "",
+                textDecoration:
+                  searchType === "Agents" ? "none !important" : "",
               }}
               onClick={() => setSearchType("Agents")}
             >

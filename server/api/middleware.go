@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/ninja-software/terror/v2"
@@ -24,53 +25,56 @@ func (errMsg ErrorMessage) String() string {
 }
 
 type HTTPErrorResponse struct {
-	Code    int    `json:"code"`
+	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
 // WithError middleware handles the HTTP error response
 func WithError(next func(w http.ResponseWriter, r *http.Request) (int, error)) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		contents, err := ioutil.ReadAll(r.Body)
-		r.Body = ioutil.NopCloser(bytes.NewReader(contents))
+		contents, err := io.ReadAll(r.Body)
+		if err != nil {
+			terror.Echo(err)
+		}
+		r.Body = io.NopCloser(bytes.NewReader(contents))
 		defer r.Body.Close()
 
 		code, err := next(w, r)
 		if err != nil {
 			terror.Echo(err)
 			errObj := &HTTPErrorResponse{
-				Code:    code,
+				Code:    fmt.Sprintf("%d", code),
 				Message: err.Error(),
 			}
 
 			var tErr *terror.TError
-			if errors.As(err, tErr) {
+			if errors.As(err, &tErr) {
 				errObj.Message = tErr.Message
-			}
 
-			// set generic message if friendly message not set
-			if tErr.Error() == tErr.Message {
-				if code == 500 {
-					errObj.Message = InternalServerError.String()
-				}
+				// set generic message if friendly message not set
+				if tErr.Error() == tErr.Message {
+					if code == 500 {
+						errObj.Message = InternalServerError.String()
+					}
 
-				if code == 403 {
-					errObj.Message = Forbidden.String()
-				}
+					if code == 403 {
+						errObj.Message = Forbidden.String()
+					}
 
-				if code == 401 {
-					errObj.Message = Unauthorized.String()
-				}
+					if code == 401 {
+						errObj.Message = Unauthorized.String()
+					}
 
-				if code == 400 {
-					errObj.Message = BadRequest.String()
+					if code == 400 {
+						errObj.Message = BadRequest.String()
+					}
 				}
 			}
 
 			jsonErr, err := json.Marshal(errObj)
 			if err != nil {
 				terror.Echo(err)
-				http.Error(w, `{"code": "00001",:message:"JSON failed, please contact IT."}`, code)
+				http.Error(w, `{"code":"00001","message":"JSON failed, please contact IT."}`, code)
 				return
 			}
 

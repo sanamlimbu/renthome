@@ -1,7 +1,14 @@
 import {
+  EmailOutlined,
+  LockOutlined,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
+import {
   Alert,
   Button,
   Divider,
+  InputAdornment,
   Link,
   Snackbar,
   TextField,
@@ -10,11 +17,12 @@ import {
 import Card from "@mui/material/Card";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Privacy from "../components/privacy";
 import RentHomeLogo from "../components/rentHomeLogo";
-import Social, { SocialAction, socialList } from "../components/social";
+import Social from "../components/social";
 import { API_ADDRESS } from "../config";
+import { socialList } from "../const";
 import "../styles/index.css";
 
 interface ISignupInput {
@@ -25,8 +33,6 @@ interface ISignupInput {
 export default function SignupPage() {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [error, setError] = React.useState("");
-  const location = useLocation();
-  let from = ((location.state as any)?.from?.pathname as string) || "/";
   const navigate = useNavigate();
 
   const {
@@ -35,10 +41,11 @@ export default function SignupPage() {
     formState: { errors },
   } = useForm<ISignupInput>();
   const [open, setOpen] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const onSubmit: SubmitHandler<ISignupInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/api/auth/email-signup`, {
+      const res = await fetch(`${API_ADDRESS}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +63,6 @@ export default function SignupPage() {
         navigate("/");
       }
     } catch (error) {
-      console.log(error);
       setSnackbarOpen(true);
     }
   };
@@ -68,7 +74,6 @@ export default function SignupPage() {
     if (reason === "clickaway") {
       return;
     }
-
     setSnackbarOpen(false);
   };
 
@@ -89,6 +94,13 @@ export default function SignupPage() {
                 message: "Please enter a valid email address.",
               },
             })}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlined />
+                </InputAdornment>
+              ),
+            }}
           />
           {errors.email && (
             <span style={{ color: "red", fontSize: "14px" }}>
@@ -98,13 +110,29 @@ export default function SignupPage() {
           <TextField
             variant="outlined"
             placeholder="Password"
-            type={"password"}
+            type={showPassword ? "text" : "password"}
             {...register("password", {
               required: {
                 value: true,
                 message: "Please enter a password.",
               },
             })}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlined />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  {showPassword ? (
+                    <VisibilityOff onClick={() => setShowPassword(false)} />
+                  ) : (
+                    <Visibility onClick={() => setShowPassword(true)} />
+                  )}
+                </InputAdornment>
+              ),
+            }}
           />
           {errors.password && (
             <span style={{ color: "red", fontSize: "14px" }}>
@@ -128,12 +156,7 @@ export default function SignupPage() {
         </Typography>
         <Divider sx={{ fontWeight: "700" }}>OR</Divider>
         {socialList.map((s) => (
-          <Social
-            key={s.name}
-            type={s}
-            action={SocialAction.signin}
-            from={from}
-          />
+          <Social key={s.name} type={s} />
         ))}
         <Divider />
         <Typography
@@ -148,6 +171,10 @@ export default function SignupPage() {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
       >
         <Alert
           onClose={handleSnackbarClose}

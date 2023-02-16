@@ -1,4 +1,4 @@
-import { Perm, PropertyCategory, PropertyType } from "./enums";
+import { PropertyCategory, PropertyType } from "./enums";
 
 export interface Property {
   id: string;
@@ -46,30 +46,62 @@ export interface Manager {
 }
 
 export interface User {
-  name: string;
-  mobile: string;
-  email: string;
-  isVerified: boolean;
-  avatarID: string;
-  roleID: string;
-  role: Role;
-
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
-}
-
-export interface Role {
   id: string;
   name: string;
-  permissions: Perm[];
-  tier: number;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
+  email: string;
+  facebook_id?: string;
+  google_id?: string;
+  apple_id?: string;
+  title?: string;
+  description?: string;
+  role: string;
+  mobile?: string;
+  is_verified: boolean;
+  avatar_id?: string;
+  created_at: Date;
+  update_at: Date;
+  deleted_at?: Date;
+  notifications: Notification[];
 }
 
-export interface GoogleAuthRequest {
+export interface GoogleUser {
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  name: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+  locale: string;
+}
+
+export interface SocialType {
+  name: string;
+  bgColor: string;
+  color: string;
+}
+
+export interface EmailAuthResponse {
+  user: User;
+  token: string;
+}
+
+export interface ErrorResponse {
   code: string;
-  redirect_uri: string;
+  message: string;
+}
+
+export interface Notification {
+  id: string;
+  name: string;
+  slug: string;
+  method: NotificationMethod;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
+}
+
+enum NotificationMethod {
+  Email = "Email",
+  Push = "Push",
 }
