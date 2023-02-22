@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getUserFromLocalStorage,
   isTokenExpired,
@@ -15,9 +15,7 @@ interface IUserContext {
 const UserContext = React.createContext<IUserContext>({} as IUserContext);
 
 const UserContextProvider = (props: { children: React.ReactNode }) => {
-  const [user, setUser] = React.useState<User | undefined>(
-    getUserFromLocalStorage()
-  );
+  const [user, setUser] = useState<User | undefined>(getUserFromLocalStorage());
   useEffect(() => {
     if (!user) {
       return;

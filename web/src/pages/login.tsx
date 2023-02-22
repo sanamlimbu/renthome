@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import Card from "@mui/material/Card";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Privacy from "../components/privacy";
@@ -43,10 +43,10 @@ export default function LoginPage() {
     register,
     formState: { errors },
   } = useForm<ILoginInput>();
-  const [open, setOpen] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
 

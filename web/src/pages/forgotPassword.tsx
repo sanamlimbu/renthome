@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Privacy from "../components/privacy";
 import RentHomeLogo from "../components/rentHomeLogo";
@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
     register,
     formState: { errors },
   } = useForm<IForgotPasswordInput>();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const onSubmit: SubmitHandler<IForgotPasswordInput> = (data) => {
     console.log(data);

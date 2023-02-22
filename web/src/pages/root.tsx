@@ -12,7 +12,7 @@ export default function RootPage() {
   return (
     <>
       <NavBar />
-      <Box sx={{ padding: matches ? "5vh 20vw 5vh 20vw" : "2vh 5vw 2vh 5vw" }}>
+      <Box sx={{ padding: matches ? "5vh 25vw 5vh 25vw" : "2vh 5vw 2vh 5vw" }}>
         <Outlet />
       </Box>
       <Footer />

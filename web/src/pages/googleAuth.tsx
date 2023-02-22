@@ -21,7 +21,6 @@ export default function GoogleAuthRedirectPage() {
         });
 
         const user = await res.json();
-        console.log(user);
       } catch (error) {
         console.log(error);
       }

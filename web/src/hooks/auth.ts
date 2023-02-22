@@ -1,7 +1,7 @@
-import React from "react";
+import { useState } from "react";
 
 export function useOAuth() {
-  const [googleState, setGoogleState] = React.useState();
+  const [googleState, setGoogleState] = useState();
 
   function getGoogleState() {}
 

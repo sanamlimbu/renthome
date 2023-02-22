@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import Card from "@mui/material/Card";
-import React from "react";
+import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Privacy from "../components/privacy";
@@ -31,8 +31,8 @@ interface ISignupInput {
 }
 
 export default function SignupPage() {
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -40,8 +40,8 @@ export default function SignupPage() {
     register,
     formState: { errors },
   } = useForm<ISignupInput>();
-  const [open, setOpen] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit: SubmitHandler<ISignupInput> = async (input) => {
     try {

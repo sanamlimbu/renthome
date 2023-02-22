@@ -16,7 +16,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useContext } from "react";
+import { useContext, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Property from "../components/property";
 import { UserContext } from "../context/user";
@@ -39,10 +39,10 @@ interface IFormInput {
 
 export default function HomePage() {
   const { user } = useContext(UserContext);
-  const [filterType, setFilterType] = React.useState("Rent");
-  const [searchType, setSearchType] = React.useState("Rent");
+  const [filterType, setFilterType] = useState("Rent");
+  const [searchType, setSearchType] = useState("Rent");
 
-  const [openFilter, setOpenFilter] = React.useState(false);
+  const [openFilter, setOpenFilter] = useState(false);
   const { control, handleSubmit, register, reset } = useForm({
     defaultValues: {
       suburb: "",

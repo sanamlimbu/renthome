@@ -8,13 +8,13 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import React, { useContext } from "react";
+import { useContext, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/user";
 import RentHomeLogo from "./rentHomeLogo";
 
 export default function NavBar() {
-  const [openMenu, setOpenMenu] = React.useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
   const matches = useMediaQuery("(min-width:769px)");
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
@@ -105,7 +105,7 @@ export default function NavBar() {
         )}
       </div>
       <Divider />
-      {openMenu && (
+      {openMenu && location.pathname === "/me" && (
         <div>
           <div
             style={{

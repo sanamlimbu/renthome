@@ -95,6 +95,8 @@ export interface Notification {
   id: string;
   name: string;
   slug: string;
+  description: string;
+  category: string;
   method: NotificationMethod;
   created_at: Date;
   updated_at: Date;
@@ -104,4 +106,24 @@ export interface Notification {
 enum NotificationMethod {
   Email = "Email",
   Push = "Push",
+}
+
+export interface Privacy {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
+}
+
+export interface PrivacyState {
+  privacy: Privacy;
+  state: string;
+}
+
+export interface NotificationState {
+  notification: Notification;
+  state: string;
 }
