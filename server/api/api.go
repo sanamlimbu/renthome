@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
 	"renthome/email"
 	"time"
 
@@ -32,13 +31,12 @@ func NewAPIController(mailer *email.Mailer, addr string, auther *Auther, conn *s
 func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux {
 	r := chi.NewRouter()
 
-	fmt.Println(publicHostURL)
-
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{adminHostURL, publicHostURL},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
+		AllowedMethods:   []string{"HEAD", "GET", "POST", "PUT"},
 	}))
 
 	r.Use(middleware.RequestID)
@@ -60,6 +58,10 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 				r.Post("/logout", WithError(api.LogoutHandler))
 			})
 		})
+		r.Post("/notifications", WithError(api.GetNotificationsHandler))
+		r.Post("/privacies", WithError(api.GetPrivaciesHandler))
+		r.Put("/notifications/update", WithError(WithUser(api, api.UpdateNotificationHandler)))
+		r.Put("/privacies/update", WithError(WithUser(api, api.UpdatePrivacyHandler)))
 	})
 
 	return r

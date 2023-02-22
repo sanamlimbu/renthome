@@ -31,6 +31,8 @@ const ErrPasswordHash = "Unable to generate password hash."
 const ErrSomethingWentWrong = "Something went wrong, please try again."
 const ErrMissAuthToken = "Missing authorization token."
 const ErrInvalidToken = "Invalid token."
+const ErrBadRequest = "Bad request, please try again."
+const ErrUnauthorised = "You are not authorised to perform this action."
 
 type Role string
 
@@ -320,17 +322,7 @@ func (api *APIController) LogoutHandler(w http.ResponseWriter, r *http.Request) 
 		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return http.StatusUnauthorized, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
-	}
-
-	token, err := GetJWTAccessToken(authHeader)
-	if err != nil {
-		return http.StatusUnauthorized, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
-	}
-
-	userID, err := GetUserIDFromToken(token, api.Auther.JWTSecretByte)
+	userID, err := GetUserIDFromToken(api, r)
 	if err != nil || userID == "" {
 		return http.StatusUnauthorized, terror.Error(fmt.Errorf("invalid token"), ErrInvalidToken)
 	}
@@ -403,6 +395,7 @@ func GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, error) {
 	return tokenString, nil
 }
 
+// GetJWTAccessToken returns access token from auth header
 func GetJWTAccessToken(authHeader string) (string, error) {
 
 	// Split the Authorization header into its parts
@@ -448,14 +441,24 @@ func VerfiyJWTAccessToken(tokenString string, jwtSecret []byte) (bool, error) {
 
 }
 
-// verifies token and returns user id
-func GetUserIDFromToken(tokenString string, jwtSecret []byte) (string, error) {
+// GetUserIDFromToken verifies token and returns user id
+func GetUserIDFromToken(api *APIController, r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	tokenString, err := GetJWTAccessToken(authHeader)
+	if err != nil {
+		return "", terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
 	// Parse the token and extract the claims
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, terror.Error(fmt.Errorf("invalid signing method"), "Invalid signing method.")
 		}
-		return jwtSecret, nil
+		return api.Auther.JWTSecretByte, nil
 	})
 
 	if err != nil {
@@ -474,5 +477,50 @@ func GetUserIDFromToken(tokenString string, jwtSecret []byte) (string, error) {
 	}
 
 	return "", terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
+
+}
+
+// GetUserFromToken verifies token and returns user
+func GetUserFromToken(api *APIController, r *http.Request) (*boiler.User, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return nil, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	tokenString, err := GetJWTAccessToken(authHeader)
+	if err != nil {
+		return nil, terror.Error(fmt.Errorf("missing authorization token"), ErrMissAuthToken)
+	}
+
+	// Parse the token and extract the claims
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, terror.Error(fmt.Errorf("invalid signing method"), "Invalid signing method.")
+		}
+		return api.Auther.JWTSecretByte, nil
+	})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return nil, terror.Error(fmt.Errorf("invalid token signature"), "Invalid token signature.")
+		}
+		return nil, err
+	}
+
+	// Verify the token expiry and returns user
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		if claims.ExpiresAt < time.Now().Unix() {
+			return nil, terror.Error(fmt.Errorf("token has expired"), "Token has expired.")
+		}
+
+		user, err := boiler.FindUser(api.Conn, claims.UserID)
+		if err != nil {
+			return nil, terror.Error(err, "Cannot find user.")
+		}
+
+		return user, nil
+	}
+
+	return nil, terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
 
 }

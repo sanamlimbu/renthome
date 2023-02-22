@@ -110,11 +110,26 @@ func SeedFunc(ctxCLI *cli.Context, ctx context.Context) error {
 		return terror.Panic(err)
 	}
 
-	fmt.Println("Seeding users")
-	err = seedUsers(ctx, conn)
+	err = seedNotifications(ctx, conn)
 	if err != nil {
+		fmt.Println("Failed seeding notifications")
 		return err
 	}
+	fmt.Println("Seeded notifications")
+
+	err = seedPrivacies(ctx, conn)
+	if err != nil {
+		fmt.Println("Failed seeding privacies")
+		return err
+	}
+	fmt.Println("Seeded privacies")
+
+	err = seedUsers(ctx, conn)
+	if err != nil {
+		fmt.Println("Failed seeding users")
+		return err
+	}
+	fmt.Println("Seeded users")
 
 	return nil
 }
@@ -162,6 +177,9 @@ func connectDB(
 	return conn, nil
 }
 
+const memberID = "38b6df11-5abb-498e-94c8-3b765ff0db40"
+const superadminID = "fb0da5e6-834d-4a88-963c-c8cdd3d92528"
+
 func seedUsers(ctx context.Context, conn *sql.DB) error {
 	tx, err := conn.BeginTx(ctx, nil)
 	if err != nil {
@@ -176,6 +194,7 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 
 	// Insert superadmin
 	superAdmin := &boiler.User{
+		ID:          superadminID,
 		Name:        "Super Admin",
 		Email:       null.StringFrom("superadmin@example.com"),
 		Title:       null.StringFrom("Developer"),
@@ -189,7 +208,7 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 		return err
 	}
 
-	superAdminPasswordHash := boiler.PasswordHash{
+	superAdminPasswordHash := &boiler.PasswordHash{
 		PasswordHash: string(hash),
 		UserID:       superAdmin.ID,
 	}
@@ -197,6 +216,198 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 	err = superAdminPasswordHash.Insert(tx, boil.Infer())
 	if err != nil {
 		return err
+	}
+
+	// Insert member
+	member := &boiler.User{
+		ID:          memberID,
+		Name:        "Member",
+		Email:       null.StringFrom("member@example.com"),
+		Title:       null.StringFrom("Registered Nurse"),
+		Description: null.StringFrom("Member of renthome.com"),
+		IsVerified:  true,
+		Role:        "MEMBER",
+	}
+
+	err = member.Insert(tx, boil.Infer())
+	if err != nil {
+		return err
+	}
+
+	memberPasswordHash := &boiler.PasswordHash{
+		PasswordHash: string(hash),
+		UserID:       member.ID,
+	}
+
+	err = memberPasswordHash.Insert(tx, boil.Infer())
+	if err != nil {
+		return err
+	}
+
+	notifications, err := boiler.Notifications().All(tx)
+	if err != nil {
+		return err
+	}
+
+	privacies, err := boiler.Privacies().All(tx)
+	if err != nil {
+		return err
+	}
+
+	for _, notification := range notifications {
+		userNotification := &boiler.UserNotification{
+			UserID:         member.ID,
+			NotificationID: notification.ID,
+		}
+		err = userNotification.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, privacy := range privacies {
+		userPrivacy := &boiler.UserPrivacy{
+			UserID:    member.ID,
+			PrivacyID: privacy.ID,
+		}
+
+		err = userPrivacy.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func seedNotifications(ctx context.Context, conn *sql.DB) error {
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	notifications := []boiler.Notification{
+		{
+			Name:        "Your property journey",
+			Slug:        "your-property-journey",
+			Method:      "Email",
+			Category:    "Property journey",
+			Description: "Recommended property information and tools based on your searches and activity.",
+		},
+		{
+			Name:        "Saved search alerts",
+			Slug:        "saved-search-alerts-email",
+			Method:      "Email",
+			Category:    "Properties",
+			Description: "Manage what alerts you get when you've saved a search.",
+		},
+		{
+			Name:        "Saved search alerts",
+			Slug:        "saved-search-alerts-push",
+			Method:      "Push",
+			Category:    "Properties",
+			Description: "Manage what alerts you get when you've saved a search.",
+		},
+		{
+			Name:        "Property updates",
+			Slug:        "property-updates",
+			Method:      "Push",
+			Category:    "Properties",
+			Description: "Notifications about properties you've shown interest in.",
+		},
+		{
+			Name:        "Promoted residential properties",
+			Slug:        "promoted-residential-properties",
+			Method:      "Email",
+			Category:    "Properties",
+			Description: "Notifications about residential properties relevant to your search.",
+		},
+		{
+			Name:        "Promoted new development",
+			Slug:        "promoted-new-developement",
+			Method:      "Email",
+			Category:    "Properties",
+			Description: "Recommended new developments and property projects based on your searches and activity.",
+		},
+		{
+			Name:        "Market updates",
+			Slug:        "market-updates",
+			Method:      "Email",
+			Category:    "Property market",
+			Description: "Market data, recent sales, auction results and updates on properties you like.",
+		},
+		{
+			Name:        "Sales and auction results",
+			Slug:        "sales-and-auction-results",
+			Method:      "Push",
+			Category:    "Property market",
+			Description: "Latest auction results and property sales.",
+		},
+		{
+			Name:        "Property news and guides",
+			Slug:        "property-news-and-guides",
+			Method:      "Email",
+			Category:    "Property market",
+			Description: "The latest property news, guides and inspiration.",
+		},
+		{
+			Name:        "Property finance",
+			Slug:        "property-finance",
+			Method:      "Email",
+			Category:    "Finance",
+			Description: "Finance updates and tools like calculators and guides.",
+		},
+	}
+
+	for _, notification := range notifications {
+		err = notification.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func seedPrivacies(ctx context.Context, conn *sql.DB) error {
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	privacies := []boiler.Privacy{
+		{
+			Name:        "Personalised advertising",
+			Slug:        "personalised-advertising",
+			Description: "Advertising tailored to you based on your activity and the information you've provided. If you opt out, you'll still get ads but they won't be tailored to you.",
+		},
+		{
+			Name:        "Suggested properties",
+			Slug:        "suggested-properties",
+			Description: "Property suggestions that match your activity and searches.",
+		},
+		{
+			Name:        "Property updates",
+			Slug:        "property updates",
+			Description: "Relates to the bell icon and notifications about your saved properties you've shown interest in.",
+		},
+	}
+
+	for _, privacy := range privacies {
+		err = privacy.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
 	}
 
 	err = tx.Commit()
