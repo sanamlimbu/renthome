@@ -567,7 +567,7 @@ const NotificationPrivacyUpdateModal = (props: {
             <Typography
               sx={{ display: "flex", alignItems: "center", gap: "8px" }}
             >
-              <EmailOutlined /> {"Email"}
+              <EmailOutlined color="primary" /> {item.notification.method}
             </Typography>
             <div
               style={{ paddingRight: "16px" }}
@@ -577,12 +577,17 @@ const NotificationPrivacyUpdateModal = (props: {
               }}
             >
               {item.state === "On" && (
-                <ToggleOnOutlined sx={{ cursor: "pointer" }} fontSize="large" />
+                <ToggleOnOutlined
+                  sx={{ cursor: "pointer" }}
+                  fontSize="large"
+                  color="primary"
+                />
               )}
               {item.state === "Off" && (
                 <ToggleOffOutlined
                   sx={{ cursor: "pointer", opacity: "0.5" }}
                   fontSize="large"
+                  color="primary"
                 />
               )}
             </div>
@@ -590,7 +595,7 @@ const NotificationPrivacyUpdateModal = (props: {
         </div>
       )}
       {isPrivacyState(item) && (
-        <div style={{ padding: "32px" }}>
+        <div style={{ padding: "32px 32px 10px 32px" }}>
           <div
             style={{
               display: "flex",
@@ -613,6 +618,28 @@ const NotificationPrivacyUpdateModal = (props: {
           >
             {item.privacy.description}
           </Typography>
+
+          <div
+            onClick={() => {
+              handleToggle();
+              setError("");
+            }}
+          >
+            {item.state === "On" && (
+              <ToggleOnOutlined
+                sx={{ cursor: "pointer" }}
+                fontSize="large"
+                color="primary"
+              />
+            )}
+            {item.state === "Off" && (
+              <ToggleOffOutlined
+                sx={{ cursor: "pointer", opacity: "0.5" }}
+                fontSize="large"
+                color="primary"
+              />
+            )}
+          </div>
         </div>
       )}
       {error && (
