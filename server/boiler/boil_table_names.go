@@ -4,17 +4,25 @@
 package boiler
 
 var TableNames = struct {
-	Blobs            string
-	PasswordHashes   string
-	Properties       string
-	PropertyBlobs    string
-	SchemaMigrations string
-	Users            string
+	Blobs             string
+	Notifications     string
+	PasswordHashes    string
+	Privacies         string
+	Properties        string
+	PropertyBlobs     string
+	SchemaMigrations  string
+	UserNotifications string
+	UserPrivacies     string
+	Users             string
 }{
-	Blobs:            "blobs",
-	PasswordHashes:   "password_hashes",
-	Properties:       "properties",
-	PropertyBlobs:    "property_blobs",
-	SchemaMigrations: "schema_migrations",
-	Users:            "users",
+	Blobs:             "blobs",
+	Notifications:     "notifications",
+	PasswordHashes:    "password_hashes",
+	Privacies:         "privacies",
+	Properties:        "properties",
+	PropertyBlobs:     "property_blobs",
+	SchemaMigrations:  "schema_migrations",
+	UserNotifications: "user_notifications",
+	UserPrivacies:     "user_privacies",
+	Users:             "users",
 }

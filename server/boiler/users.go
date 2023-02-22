@@ -163,17 +163,23 @@ var UserWhere = struct {
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
-	Avatar       string
-	PasswordHash string
+	Avatar            string
+	PasswordHash      string
+	UserNotifications string
+	UserPrivacies     string
 }{
-	Avatar:       "Avatar",
-	PasswordHash: "PasswordHash",
+	Avatar:            "Avatar",
+	PasswordHash:      "PasswordHash",
+	UserNotifications: "UserNotifications",
+	UserPrivacies:     "UserPrivacies",
 }
 
 // userR is where relationships are stored.
 type userR struct {
-	Avatar       *Blob         `boiler:"Avatar" boil:"Avatar" json:"Avatar" toml:"Avatar" yaml:"Avatar"`
-	PasswordHash *PasswordHash `boiler:"PasswordHash" boil:"PasswordHash" json:"PasswordHash" toml:"PasswordHash" yaml:"PasswordHash"`
+	Avatar            *Blob                 `boiler:"Avatar" boil:"Avatar" json:"Avatar" toml:"Avatar" yaml:"Avatar"`
+	PasswordHash      *PasswordHash         `boiler:"PasswordHash" boil:"PasswordHash" json:"PasswordHash" toml:"PasswordHash" yaml:"PasswordHash"`
+	UserNotifications UserNotificationSlice `boiler:"UserNotifications" boil:"UserNotifications" json:"UserNotifications" toml:"UserNotifications" yaml:"UserNotifications"`
+	UserPrivacies     UserPrivacySlice      `boiler:"UserPrivacies" boil:"UserPrivacies" json:"UserPrivacies" toml:"UserPrivacies" yaml:"UserPrivacies"`
 }
 
 // NewStruct creates a new relationship struct
@@ -193,6 +199,20 @@ func (r *userR) GetPasswordHash() *PasswordHash {
 		return nil
 	}
 	return r.PasswordHash
+}
+
+func (r *userR) GetUserNotifications() UserNotificationSlice {
+	if r == nil {
+		return nil
+	}
+	return r.UserNotifications
+}
+
+func (r *userR) GetUserPrivacies() UserPrivacySlice {
+	if r == nil {
+		return nil
+	}
+	return r.UserPrivacies
 }
 
 // userL is where Load methods for each relationship are stored.
@@ -470,6 +490,34 @@ func (o *User) PasswordHash(mods ...qm.QueryMod) passwordHashQuery {
 	return PasswordHashes(queryMods...)
 }
 
+// UserNotifications retrieves all the user_notification's UserNotifications with an executor.
+func (o *User) UserNotifications(mods ...qm.QueryMod) userNotificationQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"user_notifications\".\"user_id\"=?", o.ID),
+	)
+
+	return UserNotifications(queryMods...)
+}
+
+// UserPrivacies retrieves all the user_privacy's UserPrivacies with an executor.
+func (o *User) UserPrivacies(mods ...qm.QueryMod) userPrivacyQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"user_privacies\".\"user_id\"=?", o.ID),
+	)
+
+	return UserPrivacies(queryMods...)
+}
+
 // LoadAvatar allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (userL) LoadAvatar(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
@@ -713,6 +761,234 @@ func (userL) LoadPasswordHash(e boil.Executor, singular bool, maybeUser interfac
 	return nil
 }
 
+// LoadUserNotifications allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadUserNotifications(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`user_notifications`),
+		qm.WhereIn(`user_notifications.user_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load user_notifications")
+	}
+
+	var resultSlice []*UserNotification
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice user_notifications")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_notifications")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_notifications")
+	}
+
+	if len(userNotificationAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.UserNotifications = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userNotificationR{}
+			}
+			foreign.R.User = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.UserID {
+				local.R.UserNotifications = append(local.R.UserNotifications, foreign)
+				if foreign.R == nil {
+					foreign.R = &userNotificationR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadUserPrivacies allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadUserPrivacies(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`user_privacies`),
+		qm.WhereIn(`user_privacies.user_id in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load user_privacies")
+	}
+
+	var resultSlice []*UserPrivacy
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice user_privacies")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_privacies")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_privacies")
+	}
+
+	if len(userPrivacyAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.UserPrivacies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userPrivacyR{}
+			}
+			foreign.R.User = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.UserID {
+				local.R.UserPrivacies = append(local.R.UserPrivacies, foreign)
+				if foreign.R == nil {
+					foreign.R = &userPrivacyR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetAvatar of the user to the related item.
 // Sets o.R.Avatar to related.
 // Adds o to related.R.AvatarUsers.
@@ -837,6 +1113,110 @@ func (o *User) SetPasswordHash(exec boil.Executor, insert bool, related *Passwor
 		}
 	} else {
 		related.R.User = o
+	}
+	return nil
+}
+
+// AddUserNotifications adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.UserNotifications.
+// Sets related.R.User appropriately.
+func (o *User) AddUserNotifications(exec boil.Executor, insert bool, related ...*UserNotification) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.UserID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"user_notifications\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+				strmangle.WhereClause("\"", "\"", 2, userNotificationPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.UserID, rel.NotificationID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.UserID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userR{
+			UserNotifications: related,
+		}
+	} else {
+		o.R.UserNotifications = append(o.R.UserNotifications, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userNotificationR{
+				User: o,
+			}
+		} else {
+			rel.R.User = o
+		}
+	}
+	return nil
+}
+
+// AddUserPrivacies adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.UserPrivacies.
+// Sets related.R.User appropriately.
+func (o *User) AddUserPrivacies(exec boil.Executor, insert bool, related ...*UserPrivacy) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.UserID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"user_privacies\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+				strmangle.WhereClause("\"", "\"", 2, userPrivacyPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.UserID, rel.PrivacyID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.UserID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userR{
+			UserPrivacies: related,
+		}
+	} else {
+		o.R.UserPrivacies = append(o.R.UserPrivacies, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userPrivacyR{
+				User: o,
+			}
+		} else {
+			rel.R.User = o
+		}
 	}
 	return nil
 }
