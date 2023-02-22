@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"renthome/boiler"
 
 	"github.com/ninja-software/terror/v2"
 )
@@ -83,5 +84,23 @@ func WithError(next func(w http.ResponseWriter, r *http.Request) (int, error)) h
 		}
 	}
 
+	return fn
+}
+
+// WithUser checks for authenticated user
+func WithUser(api *APIController, next func(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error)) func(w http.ResponseWriter, r *http.Request) (int, error) {
+	fn := func(w http.ResponseWriter, r *http.Request) (int, error) {
+		user, err := GetUserFromToken(api, r)
+		if err != nil {
+			return http.StatusUnauthorized, terror.Error(err, ErrUnauthorised)
+		}
+
+		if user != nil {
+			return next(w, r, user)
+		}
+
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("unathorised"), ErrUnauthorised)
+
+	}
 	return fn
 }
