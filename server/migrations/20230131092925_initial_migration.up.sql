@@ -176,8 +176,9 @@ CREATE TABLE property_blobs
     id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     name                TEXT        NOT NULL,
     slug                TEXT UNIQUE NOT NULL,
-    method              TEXT        NOT NULL CHECK (type IN ('Email', 'Push')), 
-    category            TEXT        NOT NULL CHECK (type IN ('Property journey', 'Properties', 'Property market', 'Finance'))
+    description         TEXT        NOT NULL,        
+    method              TEXT        NOT NULL CHECK (method IN ('Email', 'Push')), 
+    category            TEXT        NOT NULL CHECK (category IN ('Property journey', 'Properties', 'Property market', 'Finance')),
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     deleted_at          TIMESTAMPTZ
@@ -188,9 +189,9 @@ CREATE TABLE user_notifications
 (
     user_id             UUID NOT NULL REFERENCES users (id),
     notification_id     UUID NOT NULL REFERENCES notifications (id),
+    state               TEXT NOT NULL CHECK (state IN ('On', 'Off')) DEFAULT 'On',
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    deleted_at          TIMESTAMPTZ,
     PRIMARY KEY (user_id, notification_id)
 );
 
@@ -202,20 +203,21 @@ CREATE TABLE user_notifications
     id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     name                TEXT        NOT NULL,
     slug                TEXT UNIQUE NOT NULL,
+    description         TEXT        NOT NULL,
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     deleted_at          TIMESTAMPTZ
 );
 
 -- user_privacies
-CERATE TABLE user_privacies
+CREATE TABLE user_privacies
 (
     user_id        UUID NOT NULL REFERENCES users (id),
     privacy_id     UUID NOT NULL REFERENCES privacies (id),
+    state          TEXT NOT NULL CHECK (state IN ('On', 'Off')) DEFAULT 'On',
     created_at     TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    deleted_at     TIMESTAMPTZ,
     PRIMARY KEY (user_id, privacy_id)
-)
+);
 
 COMMIT;
