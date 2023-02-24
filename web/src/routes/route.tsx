@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { UserContext } from "../context/user";
 import BuyPage from "../pages/buy";
+import EmailUpdatePage from "../pages/emailUpdate";
 import FacebookAuthRedirectPage from "../pages/facebookAuth";
 import FindAgentPage from "../pages/findAgent";
 import ForgotPasswordPage from "../pages/forgotPassword";
@@ -13,6 +14,7 @@ import GoogleAuthRedirectPage from "../pages/googleAuth";
 import HomePage from "../pages/home";
 import LoginPage from "../pages/login";
 import { MePage } from "../pages/me";
+import PasswordUpdatePage from "../pages/passwordUpdate";
 import RentPage from "../pages/rent";
 import RootPage from "../pages/root";
 import SignupPage from "../pages/signup";
@@ -58,26 +60,35 @@ export default function RoutesProvider() {
     },
     {
       path: "/login",
-      element:
-        user === undefined ? <LoginPage /> : <Navigate to="/" replace={true} />,
+      element: user ? <Navigate to="/" replace={true} /> : <LoginPage />,
     },
     {
       path: "/signup",
-      element:
-        user === undefined ? (
-          <SignupPage />
-        ) : (
-          <Navigate to="/" replace={true} />
-        ),
+      element: user ? <Navigate to="/" replace={true} /> : <SignupPage />,
     },
     {
-      path: "forgot-password",
-      element:
-        user === undefined ? (
-          <ForgotPasswordPage />
-        ) : (
-          <Navigate to="/" replace={true} />
-        ),
+      path: "/forgot-password",
+      element: user ? (
+        <ForgotPasswordPage />
+      ) : (
+        <Navigate to="/login" replace={true} />
+      ),
+    },
+    {
+      path: "/password-update",
+      element: user ? (
+        <PasswordUpdatePage />
+      ) : (
+        <Navigate to="/login" replace={true} />
+      ),
+    },
+    {
+      path: "/email-update",
+      element: user ? (
+        <EmailUpdatePage />
+      ) : (
+        <Navigate to="/login" replace={true} />
+      ),
     },
     {
       path: "/oauth/google",

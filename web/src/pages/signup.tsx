@@ -126,9 +126,15 @@ export default function SignupPage() {
               endAdornment: (
                 <InputAdornment position="end">
                   {showPassword ? (
-                    <VisibilityOff onClick={() => setShowPassword(false)} />
+                    <VisibilityOff
+                      onClick={() => setShowPassword(false)}
+                      sx={{ cursor: "pointer" }}
+                    />
                   ) : (
-                    <Visibility onClick={() => setShowPassword(true)} />
+                    <Visibility
+                      onClick={() => setShowPassword(true)}
+                      sx={{ cursor: "pointer" }}
+                    />
                   )}
                 </InputAdornment>
               ),

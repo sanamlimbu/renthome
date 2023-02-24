@@ -366,8 +366,42 @@ func (api *APIController) forgetPasswordHandler(w http.ResponseWriter, r *http.R
 
 }
 
-func (api *APIController) changePasswordHandler(w http.ResponseWriter, r *http.Request) {
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
 
+func (api *APIController) ChangePasswordHandler(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error) {
+	req := &ChangePasswordRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	passwordHash, err := boiler.FindPasswordHash(api.Conn, user.ID)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash.PasswordHash), []byte(req.CurrentPassword))
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 8)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrPasswordHash)
+	}
+
+	passwordHash.PasswordHash = string(hash)
+	passwordHash.UpdatedAt = time.Now()
+
+	_, err = passwordHash.Update(api.Conn, boil.Infer())
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, "Unable to update password.")
+	}
+
+	return http.StatusOK, nil
 }
 
 type Claims struct {
@@ -413,8 +447,8 @@ func GetJWTAccessToken(authHeader string) (string, error) {
 	return token, nil
 }
 
-// verifies token
-func VerfiyJWTAccessToken(tokenString string, jwtSecret []byte) (bool, error) {
+// VerifyJWTAccessToken verifies JWT access token
+func VerifyJWTAccessToken(tokenString string, jwtSecret []byte) (bool, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, terror.Error(fmt.Errorf("invalid signing method"), "Invalid signing method.")

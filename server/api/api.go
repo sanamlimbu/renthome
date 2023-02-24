@@ -54,7 +54,7 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 				r.Post("/google", WithError(api.GoogleAuthHandler))
 				r.Post("/apple", api.AppleLoginHandler)
 				r.Post("/forget-password", api.forgetPasswordHandler)
-				r.Post("/change-password", api.changePasswordHandler)
+				r.Post("/change-password", WithError(WithUser(api, api.ChangePasswordHandler)))
 				r.Post("/logout", WithError(api.LogoutHandler))
 			})
 		})
