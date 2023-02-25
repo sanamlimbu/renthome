@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"renthome/boiler"
 	"strings"
@@ -362,8 +364,147 @@ func (api *APIController) AppleSignUpHandler(w http.ResponseWriter, r *http.Requ
 
 }
 
-func (api *APIController) forgetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
 
+type ForgotPasswordResponse struct {
+	ResetToken string `json:"reset_token"`
+}
+
+func (api *APIController) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &ForgotPasswordRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	user, err := boiler.Users(boiler.UserWhere.Email.EQ(null.StringFrom(strings.ToLower(req.Email)))).One(api.Conn)
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("user not available"), "Could not reset password for the account, please contact support or try again.")
+	}
+
+	// Generate a random number between 0 and 999999 inclusive
+	randInt, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+	code := fmt.Sprintf("%06d", randInt)
+
+	resetPassword := &boiler.ResetPassword{
+		UserID:    user.ID,
+		UpdatedAt: time.Now(),
+		Code:      code,
+	}
+
+	err = resetPassword.Upsert(api.Conn, true, []string{"user_id"}, boil.Whitelist("code", "updated_at"), boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	token, err := GenerateResetPasswordToken(user.ID, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	err = api.Mailer.SendAccountVerificationCode(user.Email.String, user.Name, resetPassword.Code)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, "Unable to send reset code, please try again.")
+	}
+
+	resp := &ForgotPasswordResponse{
+		ResetToken: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	return http.StatusOK, nil
+}
+
+type ConfirmForgotPasswordRequest struct {
+	Code            string `json:"code"`
+	NewPassword     string `json:"new_password"`
+	ConfirmPassword string `json:"confirm_password"`
+}
+
+type ConfirmForgotPasswordResponse struct {
+	User  *boiler.User `json:"user"`
+	Token string       `json:"token"`
+}
+
+func (api *APIController) ConfirmForgotPasswordHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &ConfirmForgotPasswordRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	user, err := GetUserFromToken(api, r)
+	if err != nil {
+		return http.StatusUnauthorized, terror.Error(err, ErrUnauthorised)
+	}
+
+	resetPassword, err := boiler.FindResetPassword(tx, user.ID)
+	if err != nil {
+		return http.StatusUnauthorized, terror.Error(err, ErrUnauthorised)
+	}
+
+	if resetPassword.Code != req.Code {
+		return http.StatusUnauthorized, terror.Error(fmt.Errorf("reset code did not match"), "Code did not match, please try again.")
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("password did not match"), "Password did not match, please try again.")
+	}
+
+	passwordHash, err := boiler.FindPasswordHash(tx, user.ID)
+	if err != nil {
+		return http.StatusUnauthorized, terror.Error(err, ErrUnauthorised)
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 8)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrPasswordHash)
+	}
+
+	passwordHash.PasswordHash = string(hash)
+	passwordHash.UpdatedAt = time.Now()
+
+	_, err = passwordHash.Update(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	resp := &ConfirmForgotPasswordResponse{
+		User:  user,
+		Token: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
+	}
+
+	return http.StatusOK, nil
 }
 
 type ChangePasswordRequest struct {
@@ -409,11 +550,33 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+// GenerateJWTAccessToken generates access token which expires in 24 hours
 func GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+			Issuer:    "go-jwt-auth",
+		},
+	}
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256, claims,
+	)
+
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// GenerateResetPasswordToken generates token for reset password which expires in a hour
+func GenerateResetPasswordToken(userID string, jwtSecret []byte) (string, error) {
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 			Issuer:    "go-jwt-auth",
 		},
 	}
