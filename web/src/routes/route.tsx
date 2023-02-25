@@ -5,20 +5,20 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { UserContext } from "../context/user";
+import ConfirmForgotPasswordPage from "../pages/auth/confirmForgotPassword";
+import EmailUpdatePage from "../pages/auth/emailUpdate";
+import FacebookAuthRedirectPage from "../pages/auth/facebookAuth";
+import ForgotPasswordPage from "../pages/auth/forgotPassword";
+import GoogleAuthRedirectPage from "../pages/auth/googleAuth";
+import LoginPage from "../pages/auth/login";
+import PasswordUpdatePage from "../pages/auth/passwordUpdate";
+import SignupPage from "../pages/auth/signup";
 import BuyPage from "../pages/buy";
-import ConfirmForgotPasswordPage from "../pages/confirmForgotPassword";
-import EmailUpdatePage from "../pages/emailUpdate";
-import FacebookAuthRedirectPage from "../pages/facebookAuth";
 import FindAgentPage from "../pages/findAgent";
-import ForgotPasswordPage from "../pages/forgotPassword";
-import GoogleAuthRedirectPage from "../pages/googleAuth";
 import HomePage from "../pages/home";
-import LoginPage from "../pages/login";
 import { MePage } from "../pages/me";
-import PasswordUpdatePage from "../pages/passwordUpdate";
 import RentPage from "../pages/rent";
 import RootPage from "../pages/root";
-import SignupPage from "../pages/signup";
 import SoldPage from "../pages/sold";
 
 export default function RoutesProvider() {

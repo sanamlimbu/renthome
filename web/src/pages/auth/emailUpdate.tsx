@@ -10,11 +10,11 @@ import {
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import RentHomeLogo from "../components/rentHomeLogo";
-import { API_ADDRESS } from "../config";
-import { getTokenFromLocalStorage } from "../helpers/auth";
-import "../styles/index.css";
-import { ErrorResponse } from "../types/types";
+import RentHomeLogo from "../../components/rentHomeLogo";
+import { API_ADDRESS } from "../../config";
+import { getTokenFromLocalStorage } from "../../helpers/auth";
+import "../../styles/index.css";
+import { ErrorResponse } from "../../types/types";
 
 interface IEmailUpdateInput {
   new_email: string;

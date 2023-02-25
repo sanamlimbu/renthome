@@ -1,8 +1,8 @@
 import { Typography } from "@mui/material";
 import queryString from "query-string";
 import { useEffect } from "react";
-import { API_ADDRESS } from "../config";
-import { getGoogleUser } from "../helpers/auth";
+import { API_ADDRESS } from "../../config";
+import { getGoogleUser } from "../../helpers/auth";
 
 export default function GoogleAuthRedirectPage() {
   const parsed = queryString.parse(window.location.hash);

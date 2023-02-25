@@ -18,12 +18,12 @@ import Card from "@mui/material/Card";
 import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import Privacy from "../components/privacy";
-import RentHomeLogo from "../components/rentHomeLogo";
-import Social from "../components/social";
-import { API_ADDRESS } from "../config";
-import { socialList } from "../const";
-import "../styles/index.css";
+import Privacy from "../../components/privacy";
+import RentHomeLogo from "../../components/rentHomeLogo";
+import Social from "../../components/social";
+import { API_ADDRESS } from "../../config";
+import { socialList } from "../../const";
+import "../../styles/index.css";
 
 interface ISignupInput {
   email: string;

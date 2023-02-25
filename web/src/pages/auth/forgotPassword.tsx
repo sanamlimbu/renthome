@@ -12,12 +12,12 @@ import {
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import Privacy from "../components/privacy";
-import RentHomeLogo from "../components/rentHomeLogo";
-import { API_ADDRESS } from "../config";
-import { saveResetPasswordTokenInLocalStorage } from "../helpers/auth";
-import "../styles/index.css";
-import { ErrorResponse, ForgotPasswordResponse } from "../types/types";
+import Privacy from "../../components/privacy";
+import RentHomeLogo from "../../components/rentHomeLogo";
+import { API_ADDRESS } from "../../config";
+import { saveResetPasswordTokenInLocalStorage } from "../../helpers/auth";
+import "../../styles/index.css";
+import { ErrorResponse, ForgotPasswordResponse } from "../../types/types";
 
 interface IForgotPasswordInput {
   email: string;

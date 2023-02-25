@@ -12,18 +12,18 @@ import {
 import { useContext, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import Privacy from "../components/privacy";
-import RentHomeLogo from "../components/rentHomeLogo";
-import { API_ADDRESS } from "../config";
-import { UserContext } from "../context/user";
+import Privacy from "../../components/privacy";
+import RentHomeLogo from "../../components/rentHomeLogo";
+import { API_ADDRESS } from "../../config";
+import { UserContext } from "../../context/user";
 import {
   getResetPasswordTokenFromLocalStorage,
   removeResetTokenFromLocalStorage,
   saveTokenInLocalStorage,
   saveUserInLocalStorage,
-} from "../helpers/auth";
-import "../styles/index.css";
-import { ErrorResponse, User } from "../types/types";
+} from "../../helpers/auth";
+import "../../styles/index.css";
+import { ErrorResponse, User } from "../../types/types";
 
 interface IConfirmForgotPasswordInput {
   code: string;
