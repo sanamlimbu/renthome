@@ -69,10 +69,10 @@ func main() {
 					&cli.StringFlag{Name: "apple_client_id", Value: "", EnvVars: []string{"RENTHOME_APPLE_CLIENT_ID"}, Usage: "Apple Client ID for OAuth functionaility."},
 					&cli.BoolFlag{Name: "cookie_secure", Value: false, EnvVars: []string{"RENTHOME_COOKIE_SECURE"}, Usage: "Cookie Secure setting option for secure cookies."},
 
-					&cli.StringFlag{Name: "mail_host", Value: "sandbox.smtp.mailtrap.io", EnvVars: []string{"RENTHOME_MAIL_HOST"}, Usage: "Mailtrap SMTP host address"},
-					&cli.StringFlag{Name: "mail_port", Value: "25", EnvVars: []string{"RENTHOME_MAIL_PORT"}, Usage: "Mailtrap SMTP port"},
-					&cli.StringFlag{Name: "mail_username", Value: "0dd7cb95f3eb7a", EnvVars: []string{"RENTHOME_MAIL_USERNAME"}, Usage: "Mailtrap username"},
-					&cli.StringFlag{Name: "mail_password", Value: "f1b4e619136ae9", EnvVars: []string{"RENTHOME_MAIL_SENDER"}, Usage: "Mailtrap password"},
+					&cli.StringFlag{Name: "mail_host", Value: "smtp.gmail.com", EnvVars: []string{"RENTHOME_MAIL_HOST"}, Usage: "Gmail SMTP host address"},
+					&cli.StringFlag{Name: "mail_port", Value: "587", EnvVars: []string{"RENTHOME_MAIL_PORT"}, Usage: "Mailtrap SMTP port"},
+					&cli.StringFlag{Name: "mail_username", Value: "", EnvVars: []string{"RENTHOME_MAIL_USERNAME"}, Usage: "Gmail email address"},
+					&cli.StringFlag{Name: "mail_password", Value: "", EnvVars: []string{"RENTHOME_MAIL_PASSWORD"}, Usage: "Gmail app specific password"},
 
 					&cli.StringFlag{Name: "admin_host_url", Value: "http://localhost:3001", EnvVars: []string{"RENTHOME_ADMIN_FRONTEND_HOST_URL"}, Usage: "The Admin Site URL used for links in the mailer and allowed cors urls"},
 					&cli.StringFlag{Name: "public_host_url", Value: "http://localhost:3000", EnvVars: []string{"RENTHOME_PUBLIC_FRONTEND_HOST_URL"}, Usage: "The Public Site URL used for links in the mailer and allowed cors urls"},
@@ -139,7 +139,10 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	mailUsername := ctxCLI.String("mail_username")
 	mailPassword := ctxCLI.String("mail_password")
 
-	mailer := email.NewMailer(mailUsername, mailPassword, mailHost, mailPort)
+	mailer, err := email.NewMailer(mailUsername, mailPassword, mailHost, mailPort)
+	if err != nil {
+		panic(err)
+	}
 
 	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID, appleClientID)
 
