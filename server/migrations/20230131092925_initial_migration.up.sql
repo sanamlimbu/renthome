@@ -100,6 +100,17 @@ CREATE TABLE password_hashes
     PRIMARY KEY (user_id)
 );
 
+-- reset passowrd codes
+CREATE TABLE reset_passwords
+(
+    user_id       UUID        NOT NULL REFERENCES users (id),
+    code          TEXT        NOT NULL,
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at    TIMESTAMPTZ,
+    PRIMARY KEY (user_id)
+);
+
 /*************
  *  Properties  *
  *************/

@@ -165,11 +165,13 @@ var UserWhere = struct {
 var UserRels = struct {
 	Avatar            string
 	PasswordHash      string
+	ResetPassword     string
 	UserNotifications string
 	UserPrivacies     string
 }{
 	Avatar:            "Avatar",
 	PasswordHash:      "PasswordHash",
+	ResetPassword:     "ResetPassword",
 	UserNotifications: "UserNotifications",
 	UserPrivacies:     "UserPrivacies",
 }
@@ -178,6 +180,7 @@ var UserRels = struct {
 type userR struct {
 	Avatar            *Blob                 `boiler:"Avatar" boil:"Avatar" json:"Avatar" toml:"Avatar" yaml:"Avatar"`
 	PasswordHash      *PasswordHash         `boiler:"PasswordHash" boil:"PasswordHash" json:"PasswordHash" toml:"PasswordHash" yaml:"PasswordHash"`
+	ResetPassword     *ResetPassword        `boiler:"ResetPassword" boil:"ResetPassword" json:"ResetPassword" toml:"ResetPassword" yaml:"ResetPassword"`
 	UserNotifications UserNotificationSlice `boiler:"UserNotifications" boil:"UserNotifications" json:"UserNotifications" toml:"UserNotifications" yaml:"UserNotifications"`
 	UserPrivacies     UserPrivacySlice      `boiler:"UserPrivacies" boil:"UserPrivacies" json:"UserPrivacies" toml:"UserPrivacies" yaml:"UserPrivacies"`
 }
@@ -199,6 +202,13 @@ func (r *userR) GetPasswordHash() *PasswordHash {
 		return nil
 	}
 	return r.PasswordHash
+}
+
+func (r *userR) GetResetPassword() *ResetPassword {
+	if r == nil {
+		return nil
+	}
+	return r.ResetPassword
 }
 
 func (r *userR) GetUserNotifications() UserNotificationSlice {
@@ -490,6 +500,17 @@ func (o *User) PasswordHash(mods ...qm.QueryMod) passwordHashQuery {
 	return PasswordHashes(queryMods...)
 }
 
+// ResetPassword pointed to by the foreign key.
+func (o *User) ResetPassword(mods ...qm.QueryMod) resetPasswordQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"user_id\" = ?", o.ID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return ResetPasswords(queryMods...)
+}
+
 // UserNotifications retrieves all the user_notification's UserNotifications with an executor.
 func (o *User) UserNotifications(mods ...qm.QueryMod) userNotificationQuery {
 	var queryMods []qm.QueryMod
@@ -751,6 +772,124 @@ func (userL) LoadPasswordHash(e boil.Executor, singular bool, maybeUser interfac
 				local.R.PasswordHash = foreign
 				if foreign.R == nil {
 					foreign.R = &passwordHashR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadResetPassword allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-1 relationship.
+func (userL) LoadResetPassword(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`reset_passwords`),
+		qm.WhereIn(`reset_passwords.user_id in ?`, args...),
+		qmhelper.WhereIsNull(`reset_passwords.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load ResetPassword")
+	}
+
+	var resultSlice []*ResetPassword
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice ResetPassword")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for reset_passwords")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for reset_passwords")
+	}
+
+	if len(resetPasswordAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.ResetPassword = foreign
+		if foreign.R == nil {
+			foreign.R = &resetPasswordR{}
+		}
+		foreign.R.User = object
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.ID == foreign.UserID {
+				local.R.ResetPassword = foreign
+				if foreign.R == nil {
+					foreign.R = &resetPasswordR{}
 				}
 				foreign.R.User = local
 				break
@@ -1109,6 +1248,55 @@ func (o *User) SetPasswordHash(exec boil.Executor, insert bool, related *Passwor
 
 	if related.R == nil {
 		related.R = &passwordHashR{
+			User: o,
+		}
+	} else {
+		related.R.User = o
+	}
+	return nil
+}
+
+// SetResetPassword of the user to the related item.
+// Sets o.R.ResetPassword to related.
+// Adds o to related.R.User.
+func (o *User) SetResetPassword(exec boil.Executor, insert bool, related *ResetPassword) error {
+	var err error
+
+	if insert {
+		related.UserID = o.ID
+
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	} else {
+		updateQuery := fmt.Sprintf(
+			"UPDATE \"reset_passwords\" SET %s WHERE %s",
+			strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+			strmangle.WhereClause("\"", "\"", 2, resetPasswordPrimaryKeyColumns),
+		)
+		values := []interface{}{o.ID, related.UserID}
+
+		if boil.DebugMode {
+			fmt.Fprintln(boil.DebugWriter, updateQuery)
+			fmt.Fprintln(boil.DebugWriter, values)
+		}
+		if _, err = exec.Exec(updateQuery, values...); err != nil {
+			return errors.Wrap(err, "failed to update foreign table")
+		}
+
+		related.UserID = o.ID
+	}
+
+	if o.R == nil {
+		o.R = &userR{
+			ResetPassword: related,
+		}
+	} else {
+		o.R.ResetPassword = related
+	}
+
+	if related.R == nil {
+		related.R = &resetPasswordR{
 			User: o,
 		}
 	} else {
