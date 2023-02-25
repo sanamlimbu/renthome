@@ -110,19 +110,35 @@ export function removeUserFromLocalStorage() {
 
 // retrieves token from local storage
 export function getTokenFromLocalStorage(): string | null {
-  const storedUser = localStorage.getItem("renthome_token");
-  const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-  return parsedUser;
+  const storedToken = localStorage.getItem("renthome_token");
+  const parsedToken = storedToken ? JSON.parse(storedToken) : null;
+  return parsedToken;
 }
 
 // saves token in local storage
-export function saveTokenInLocalStorage(user: User) {
-  localStorage.setItem("renthome_token", JSON.stringify(user));
+export function saveTokenInLocalStorage(token: string) {
+  localStorage.setItem("renthome_token", JSON.stringify(token));
+}
+
+// retrieves reset password token from local storage
+export function getResetPasswordTokenFromLocalStorage(): string | null {
+  const storedToken = localStorage.getItem("renthome_reset_password_token");
+  const parsedToken = storedToken ? JSON.parse(storedToken) : null;
+  return parsedToken;
+}
+// saves reset password token in local storage
+export function saveResetPasswordTokenInLocalStorage(token: string) {
+  localStorage.setItem("renthome_reset_password_token", JSON.stringify(token));
 }
 
 // removes token from local storage
 export function removeTokenFromLocalStorage() {
   localStorage.removeItem("renthome_token");
+}
+
+// removes reset token from local storage
+export function removeResetTokenFromLocalStorage() {
+  localStorage.removeItem("renthome_reset_password_token");
 }
 
 // checks if JWT access token is expired

@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { UserContext } from "../context/user";
 import BuyPage from "../pages/buy";
+import ConfirmForgotPasswordPage from "../pages/confirmForgotPassword";
 import EmailUpdatePage from "../pages/emailUpdate";
 import FacebookAuthRedirectPage from "../pages/facebookAuth";
 import FindAgentPage from "../pages/findAgent";
@@ -68,11 +69,11 @@ export default function RoutesProvider() {
     },
     {
       path: "/forgot-password",
-      element: user ? (
-        <ForgotPasswordPage />
-      ) : (
-        <Navigate to="/login" replace={true} />
-      ),
+      element: <ForgotPasswordPage />,
+    },
+    {
+      path: "/confirm-forgot-password",
+      element: <ConfirmForgotPasswordPage />,
     },
     {
       path: "/password-update",

@@ -1,16 +1,23 @@
+import { EmailOutlined } from "@mui/icons-material";
 import {
+  Alert,
   Button,
   Card,
   Divider,
+  InputAdornment,
   Link,
   TextField,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import Privacy from "../components/privacy";
 import RentHomeLogo from "../components/rentHomeLogo";
+import { API_ADDRESS } from "../config";
+import { saveResetPasswordTokenInLocalStorage } from "../helpers/auth";
 import "../styles/index.css";
+import { ErrorResponse, ForgotPasswordResponse } from "../types/types";
 
 interface IForgotPasswordInput {
   email: string;
@@ -23,9 +30,29 @@ export default function ForgotPasswordPage() {
     formState: { errors },
   } = useForm<IForgotPasswordInput>();
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const onSubmit: SubmitHandler<IForgotPasswordInput> = (data) => {
-    console.log(data);
+  const onSubmit: SubmitHandler<IForgotPasswordInput> = async (input) => {
+    try {
+      const res = await fetch(`${API_ADDRESS}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+      if (res.ok) {
+        const data: ForgotPasswordResponse = await res.json();
+        saveResetPasswordTokenInLocalStorage(data.reset_token);
+        navigate("/confirm-forgot-password");
+      } else {
+        const data: ErrorResponse = await res.json();
+        setError(data.message);
+      }
+    } catch (error) {
+      setError("Something went wrong, please try again.");
+    }
   };
 
   return (
@@ -40,6 +67,7 @@ export default function ForgotPasswordPage() {
           password.
         </Typography>
         <form className="Form" onSubmit={handleSubmit(onSubmit)}>
+          {error && <Alert severity="warning">{error}</Alert>}
           <TextField
             variant="outlined"
             placeholder="Email address"
@@ -49,6 +77,13 @@ export default function ForgotPasswordPage() {
                 message: "Please enter a valid email address.",
               },
             })}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlined />
+                </InputAdornment>
+              ),
+            }}
           />
           {errors.email && (
             <span style={{ color: "red", fontSize: "14px" }}>

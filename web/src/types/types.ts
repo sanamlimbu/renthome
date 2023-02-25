@@ -127,3 +127,7 @@ export interface NotificationState {
   notification: Notification;
   state: string;
 }
+
+export interface ForgotPasswordResponse {
+  reset_token: string;
+}
