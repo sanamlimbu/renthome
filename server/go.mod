@@ -20,6 +20,8 @@ require (
 	golang.org/x/crypto v0.5.0
 )
 
+require github.com/aymerick/raymond v2.0.2+incompatible // indirect
+
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
