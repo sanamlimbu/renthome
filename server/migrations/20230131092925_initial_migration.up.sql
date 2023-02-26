@@ -231,4 +231,14 @@ CREATE TABLE user_privacies
     PRIMARY KEY (user_id, privacy_id)
 );
 
+CREATE TABLE issue_tokens
+(
+    id          UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID        NOT NULL REFERENCES users (id),
+    device      TEXT        NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    expires_at  TIMESTAMPTZ NOT NULL,
+    blacklisted BOOLEAN     NOT NULL             DEFAULT FALSE
+);
+
 COMMIT;

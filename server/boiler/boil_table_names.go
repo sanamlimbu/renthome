@@ -5,6 +5,7 @@ package boiler
 
 var TableNames = struct {
 	Blobs             string
+	IssueTokens       string
 	Notifications     string
 	PasswordHashes    string
 	Privacies         string
@@ -17,6 +18,7 @@ var TableNames = struct {
 	Users             string
 }{
 	Blobs:             "blobs",
+	IssueTokens:       "issue_tokens",
 	Notifications:     "notifications",
 	PasswordHashes:    "password_hashes",
 	Privacies:         "privacies",
