@@ -12,6 +12,7 @@ import ForgotPasswordPage from "../pages/auth/forgotPassword";
 import GoogleAuthRedirectPage from "../pages/auth/googleAuth";
 import LoginPage from "../pages/auth/login";
 import PasswordUpdatePage from "../pages/auth/passwordUpdate";
+import SignoutAllPage from "../pages/auth/signoutAll";
 import SignupPage from "../pages/auth/signup";
 import BuyPage from "../pages/buy";
 import FindAgentPage from "../pages/findAgent";
@@ -87,6 +88,14 @@ export default function RoutesProvider() {
       path: "/email-update",
       element: user ? (
         <EmailUpdatePage />
+      ) : (
+        <Navigate to="/login" replace={true} />
+      ),
+    },
+    {
+      path: "/signout-all",
+      element: user ? (
+        <SignoutAllPage />
       ) : (
         <Navigate to="/login" replace={true} />
       ),

@@ -57,6 +57,8 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 				r.Post("/forgot-password-confirm", WithError(api.ConfirmForgotPasswordHandler))
 				r.Post("/change-password", WithError(WithUser(api, api.ChangePasswordHandler)))
 				r.Post("/logout", WithError(api.LogoutHandler))
+				r.Post("/change-email", WithError(WithUser(api, api.ChangeEmailHandler)))
+				r.Post("/signout-all", WithError(WithUser(api, api.SignoutAllDevicesHandler)))
 			})
 		})
 		r.Post("/notifications", WithError(api.GetNotificationsHandler))

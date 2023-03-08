@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 	"github.com/ninja-software/terror/v2"
 	"github.com/volatiletech/null/v8"
@@ -143,9 +144,22 @@ func (api *APIController) EmailLoginHandler(w http.ResponseWriter, r *http.Reque
 		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
 	}
 
-	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
 	resp := &EmailLoginResponse{
@@ -226,9 +240,22 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 		return http.StatusBadRequest, terror.Error(err, "Unable to create password hash.")
 	}
 
-	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
 	resp := &EmailSignUpResponse{
@@ -288,9 +315,24 @@ func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Reque
 		user = userAlt
 	}
 
-	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	fmt.Println("------", userAlt.ID)
+
+	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
 	resp := &GoogleAuthResponse{
@@ -397,12 +439,32 @@ func (api *APIController) ForgotPasswordHandler(w http.ResponseWriter, r *http.R
 		Code:      code,
 	}
 
-	err = resetPassword.Upsert(api.Conn, true, []string{"user_id"}, boil.Whitelist("code", "updated_at"), boil.Infer())
+	// begin transaction
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	err = resetPassword.Upsert(tx, true, []string{"user_id"}, boil.Whitelist("code", "updated_at"), boil.Infer())
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
-	token, err := GenerateResetPasswordToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
@@ -419,6 +481,11 @@ func (api *APIController) ForgotPasswordHandler(w http.ResponseWriter, r *http.R
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
 	}
 
 	return http.StatusOK, nil
@@ -484,9 +551,22 @@ func (api *APIController) ConfirmForgotPasswordHandler(w http.ResponseWriter, r 
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
-	token, err := GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
 	resp := &ConfirmForgotPasswordResponse{
@@ -545,39 +625,92 @@ func (api *APIController) ChangePasswordHandler(w http.ResponseWriter, r *http.R
 	return http.StatusOK, nil
 }
 
+type ChangeEmailHandlerRequest struct {
+	NewEmail string `json:"new_email"`
+}
+
+func (api *APIController) ChangeEmailHandler(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error) {
+	req := &ChangeEmailHandlerRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	// email already exists
+	usr, err := boiler.Users(
+		boiler.UserWhere.Email.EQ(null.StringFrom(strings.ToLower(req.NewEmail))),
+	).One(tx)
+
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	if usr != nil {
+		return http.StatusBadRequest, terror.Error(fmt.Errorf("email already exists"), "Email address already teken.")
+	}
+
+	return http.StatusOK, nil
+}
+
 type Claims struct {
-	UserID string `json:"user_id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	IsVerified bool   `json:"is_verified"`
 	jwt.StandardClaims
 }
 
 // GenerateJWTAccessToken generates access token which expires in 24 hours
-func GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, error) {
+func (api *APIController) GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, *Claims, error) {
+	tokenID, err := uuid.NewV4()
+	if err != nil {
+		return "", nil, err
+	}
+
+	user, err := boiler.FindUser(api.Conn, userID)
+	if err != nil {
+		return "", nil, err
+	}
+
 	claims := &Claims{
-		UserID: userID,
+		Email:      user.Email.String,
+		Name:       user.Name,
+		IsVerified: user.IsVerified,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 			Issuer:    "go-jwt-auth",
+			IssuedAt:  time.Now().Unix(),
+			Id:        tokenID.String(),
+			Subject:   userID,
 		},
 	}
+
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256, claims,
 	)
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return tokenString, nil
+	return tokenString, claims, nil
 }
 
 // GenerateResetPasswordToken generates token for reset password which expires in a hour
-func GenerateResetPasswordToken(userID string, jwtSecret []byte) (string, error) {
+func GenerateResetPasswordToken(tokenID string, userID string, jwtSecret []byte) (string, error) {
 	claims := &Claims{
-		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 			Issuer:    "go-jwt-auth",
+			IssuedAt:  time.Now().Unix(),
+			Id:        tokenID,
+			Subject:   userID,
 		},
 	}
 	token := jwt.NewWithClaims(
@@ -638,7 +771,7 @@ func VerifyJWTAccessToken(tokenString string, jwtSecret []byte) (bool, error) {
 
 }
 
-// GetUserIDFromToken verifies token and returns user id
+// GetUserIDFromToken checks validity of token (including not blacklisted) and returns user id
 func GetUserIDFromToken(api *APIController, r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -670,14 +803,14 @@ func GetUserIDFromToken(api *APIController, r *http.Request) (string, error) {
 		if claims.ExpiresAt < time.Now().Unix() {
 			return "", terror.Error(fmt.Errorf("token has expired"), "Token has expired.")
 		}
-		return claims.UserID, nil
+		return claims.StandardClaims.Subject, nil
 	}
 
 	return "", terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
 
 }
 
-// GetUserFromToken verifies token and returns user
+// GetUserFromToken checks validity of token (including not blacklisted) and returns user
 func GetUserFromToken(api *APIController, r *http.Request) (*boiler.User, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -710,9 +843,23 @@ func GetUserFromToken(api *APIController, r *http.Request) (*boiler.User, error)
 			return nil, terror.Error(fmt.Errorf("token has expired"), "Token has expired.")
 		}
 
-		user, err := boiler.FindUser(api.Conn, claims.UserID)
+		user, err := boiler.FindUser(api.Conn, claims.StandardClaims.Subject)
 		if err != nil {
 			return nil, terror.Error(err, "Cannot find user.")
+		}
+
+		// token blacklisted?
+		issuedToken, err := boiler.IssueTokens(boiler.IssueTokenWhere.ID.EQ(claims.StandardClaims.Id), boiler.IssueTokenWhere.UserID.EQ(user.ID)).One(api.Conn)
+		if err != nil {
+			return nil, terror.Error(err, "Invalid token.")
+		}
+
+		if issuedToken == nil {
+			return nil, terror.Error(err, "Invalid token.")
+		}
+
+		if issuedToken.Blacklisted {
+			return nil, terror.Error(err, "Invalid token.")
 		}
 
 		return user, nil
@@ -720,4 +867,27 @@ func GetUserFromToken(api *APIController, r *http.Request) (*boiler.User, error)
 
 	return nil, terror.Error(fmt.Errorf("invalid token claims"), "Invalid token claims.")
 
+}
+
+// SignoutAllDevicesHandler signs out user from all devices
+func (api *APIController) SignoutAllDevicesHandler(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error) {
+
+	// begin transaction
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	_, err = boiler.IssueTokens(boiler.IssueTokenWhere.UserID.EQ(user.ID)).UpdateAll(tx, boiler.M{"blacklisted": true})
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
+	}
+
+	return http.StatusOK, nil
 }

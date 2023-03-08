@@ -20,7 +20,6 @@ import {
   getResetPasswordTokenFromLocalStorage,
   removeResetTokenFromLocalStorage,
   saveTokenInLocalStorage,
-  saveUserInLocalStorage,
 } from "../../helpers/auth";
 import "../../styles/index.css";
 import { ErrorResponse, User } from "../../types/types";
@@ -64,7 +63,6 @@ export default function ConfirmForgotPasswordPage() {
       });
       if (res.ok) {
         const data: ConfirmForgotPasswordResponse = await res.json();
-        saveUserInLocalStorage(data.user);
         saveTokenInLocalStorage(data.token);
         removeResetTokenFromLocalStorage();
         setUser(data.user);

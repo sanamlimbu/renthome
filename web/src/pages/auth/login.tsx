@@ -26,9 +26,7 @@ import { socialList } from "../../const";
 import { UserContext } from "../../context/user";
 import {
   removeTokenFromLocalStorage,
-  removeUserFromLocalStorage,
   saveTokenInLocalStorage,
-  saveUserInLocalStorage,
 } from "../../helpers/auth";
 import "../../styles/index.css";
 
@@ -66,24 +64,23 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-User-Agent": window.navigator.userAgent,
         },
         body: JSON.stringify(input),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        removeUserFromLocalStorage();
-        removeTokenFromLocalStorage();
-        setUser(undefined);
-        setError(data.message);
-        setSnackbarOpen(true);
-      } else {
-        saveUserInLocalStorage(data.user);
+      if (res.ok) {
         saveTokenInLocalStorage(data.token);
         setUser(data.user);
         setSnackbarOpen(false);
         navigate("/");
+      } else {
+        removeTokenFromLocalStorage();
+        setUser(undefined);
+        setError(data.message);
+        setSnackbarOpen(true);
       }
     } catch (error) {
       setSnackbarOpen(true);

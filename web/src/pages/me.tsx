@@ -24,7 +24,6 @@ import { UserContext } from "../context/user";
 import {
   getTokenFromLocalStorage,
   removeTokenFromLocalStorage,
-  removeUserFromLocalStorage,
 } from "../helpers/auth";
 import { isNotificationState, isPrivacyState } from "../helpers/helper";
 import { ErrorResponse, NotificationState, PrivacyState } from "../types/types";
@@ -114,7 +113,6 @@ export function MePage() {
         setError(data.message);
         setOpenSnackbar(true);
       } else {
-        removeUserFromLocalStorage();
         removeTokenFromLocalStorage();
         setUser(undefined);
         setOpenSnackbar(false);
@@ -213,6 +211,8 @@ export function MePage() {
           <Button
             variant="outlined"
             sx={{ textTransform: "none", fontWeight: "bold" }}
+            type="button"
+            onClick={() => navigate("/signout-all")}
           >
             {" "}
             Sign out on all devices

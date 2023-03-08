@@ -92,21 +92,11 @@ export function getSocialURL(type: SocialType): string {
 }
 
 // retrieves user from local storage
-export function getUserFromLocalStorage(): User | undefined {
-  const storedUser = localStorage.getItem("renthome_user");
-  const parsedUser = storedUser ? JSON.parse(storedUser) : undefined;
-  return parsedUser;
-}
-
-// saves user in local storage
-export function saveUserInLocalStorage(user: User) {
-  localStorage.setItem("renthome_user", JSON.stringify(user));
-}
-
-// removes user from local storage
-export function removeUserFromLocalStorage() {
-  localStorage.removeItem("renthome_user");
-}
+// export function getUserFromLocalStorage(): User | undefined {
+//   const storedUser = localStorage.getItem("renthome_user");
+//   const parsedUser = storedUser ? JSON.parse(storedUser) : undefined;
+//   return parsedUser;
+// }
 
 // retrieves token from local storage
 export function getTokenFromLocalStorage(): string | null {
@@ -139,6 +129,41 @@ export function removeTokenFromLocalStorage() {
 // removes reset token from local storage
 export function removeResetTokenFromLocalStorage() {
   localStorage.removeItem("renthome_reset_password_token");
+}
+
+//
+interface JwtPayloadWithCustomClaims extends JwtPayload {
+  email: string;
+  name: string;
+  is_verified: string;
+}
+// retrives basic user from token
+export function getUserFromToken() {
+  try {
+    const token = getTokenFromLocalStorage();
+    if (!token) {
+      return undefined;
+    }
+    const date = new Date(0);
+    const decoded: JwtPayloadWithCustomClaims = jwt_decode(token);
+    date.setUTCSeconds(decoded.exp as number);
+
+    // expried
+    if (new Date().valueOf() > date.valueOf()) {
+      return undefined;
+    }
+
+    const user = {
+      id: decoded.sub,
+      name: decoded.name,
+      email: decoded.email,
+      is_verified: decoded.is_verified,
+    };
+
+    return user as unknown as User;
+  } catch (error) {
+    return undefined;
+  }
 }
 
 // checks if JWT access token is expired

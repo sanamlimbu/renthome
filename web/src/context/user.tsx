@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
-  getUserFromLocalStorage,
+  getUserFromToken,
   isTokenExpired,
   removeTokenFromLocalStorage,
-  removeUserFromLocalStorage,
 } from "../helpers/auth";
 import { User } from "../types/types";
 
@@ -15,7 +14,7 @@ interface IUserContext {
 const UserContext = React.createContext<IUserContext>({} as IUserContext);
 
 const UserContextProvider = (props: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | undefined>(getUserFromLocalStorage());
+  const [user, setUser] = useState<User | undefined>(getUserFromToken());
   useEffect(() => {
     if (!user) {
       return;
@@ -23,7 +22,6 @@ const UserContextProvider = (props: { children: React.ReactNode }) => {
 
     if (isTokenExpired()) {
       setUser(undefined);
-      removeUserFromLocalStorage();
       removeTokenFromLocalStorage();
     }
   }, [user]);
