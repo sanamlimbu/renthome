@@ -17,7 +17,6 @@ A platform for rent seeker, property owners, and property managers which facilit
     
     RENTHOME_GOOGLE_CLIENT_ID=
     RENTHOME_FACEBOOK_CLIENT_ID=
-    RENTHOME_FACEBOOK_CLIENT_ID=
 ```
 ### Init
 Spin up the project for development
