@@ -1,37 +1,61 @@
-import { Typography } from "@mui/material";
-import { useLocation } from "react-router-dom";
+import queryString from "query-string";
+import { useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_ADDRESS } from "../../config";
+import { UserContext } from "../../context/user";
+import {
+  getFacebookUser,
+  getOAuthState,
+  saveTokenInLocalStorage,
+} from "../../helpers/auth";
+import { User } from "../../types/types";
+
+interface FacebookAuthResponse {
+  user: User;
+  token: string;
+}
 
 export default function FacebookAuthRedirectPage() {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get("token");
-  console.log(token);
+  const parsed = queryString.parse(window.location.hash);
+  const token = parsed.access_token;
+  const state = parsed.state;
+  const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
-  //   if (code === null) {
-  //     return <></>;
-  //   }
+  if (state !== getOAuthState("FACEBOOK_OAUTH_STATE")) {
+    navigate("/");
+  }
 
-  //   (async function () {
-  //     try {
-  //       // retrieve Google access token
-  //       const token = await getGoogleAccessToken(code);
-  //       console.log(token);
+  useEffect(() => {
+    (async function () {
+      try {
+        // retrieve Facebook user
+        const facebookUser = await getFacebookUser(token as string);
+        // OAuth app is not verfied so Facebook doesnot send user email
+        if (facebookUser) {
+          facebookUser.email = "subbasanam08@gmail.com";
+        }
 
-  //       if (token === null) {
-  //         return <></>;
-  //       }
+        const res = await fetch(`${API_ADDRESS}/auth/facebook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(facebookUser),
+        });
+        console.log(res);
+        if (res.ok) {
+          const data: FacebookAuthResponse = await res.json();
+          saveTokenInLocalStorage(data.token);
+          setUser(data.user);
+          navigate("/");
+          console.log(data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+  }, []);
 
-  //       // retrieve Google user
-  //       const googleUser = await getGoogleUser(token);
-  //       console.log(googleUser);
-  //     } catch (error) {
-  //       return <></>;
-  //     }
-  //   })();
-
-  return (
-    <>
-      <Typography>Hello Facebook</Typography>
-    </>
-  );
+  return <></>;
 }

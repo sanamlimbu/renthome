@@ -50,7 +50,7 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 			r.Route(("/auth"), func(r chi.Router) {
 				r.Post("/login", WithError(api.EmailLoginHandler))
 				r.Post("/signup", WithError(api.EmailSignUpHandler))
-				r.Post("/facebook", api.FacebookLoginHandler)
+				r.Post("/facebook", WithError(api.FacebookAuthHandler))
 				r.Post("/google", WithError(api.GoogleAuthHandler))
 				r.Post("/apple", api.AppleLoginHandler)
 				r.Post("/forgot-password", WithError(api.ForgotPasswordHandler))

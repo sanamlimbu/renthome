@@ -103,6 +103,17 @@ type GoogleAuthResponse struct {
 	Token string      `json:"token"`
 }
 
+type FacebookUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+type FacebookAuthResponse struct {
+	User  boiler.User `json:"user"`
+	Token string      `json:"token"`
+}
+
 func (api *APIController) EmailLoginHandler(w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &EmailLoginRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
@@ -144,7 +155,7 @@ func (api *APIController) EmailLoginHandler(w http.ResponseWriter, r *http.Reque
 		return http.StatusBadRequest, terror.Error(err, "Wrong password, please try again.")
 	}
 
-	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
@@ -240,7 +251,7 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 		return http.StatusBadRequest, terror.Error(err, "Unable to create password hash.")
 	}
 
-	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
@@ -256,6 +267,41 @@ func (api *APIController) EmailSignUpHandler(w http.ResponseWriter, r *http.Requ
 	err = issueToken.Insert(tx, boil.Infer())
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	// insert default notification settings
+	notifications, err := boiler.Notifications().All(tx)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	for _, notification := range notifications {
+		userNotification := &boiler.UserNotification{
+			UserID:         user.ID,
+			NotificationID: notification.ID,
+		}
+		err = userNotification.Insert(tx, boil.Infer())
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
+	}
+
+	// insert default privacies
+	privacies, err := boiler.Privacies().All(tx)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	for _, privacy := range privacies {
+		userPrivacy := &boiler.UserPrivacy{
+			UserID:    user.ID,
+			PrivacyID: privacy.ID,
+		}
+
+		err = userPrivacy.Insert(tx, boil.Infer())
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
 	}
 
 	resp := &EmailSignUpResponse{
@@ -284,11 +330,15 @@ func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Reque
 		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
-	// begin transaction
 	ctx := context.Background()
 	tx, err := api.Conn.BeginTx(ctx, nil)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	userID, err := uuid.NewV4()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
 	user := &boiler.User{}
@@ -296,17 +346,51 @@ func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Reque
 	userAlt, err := boiler.Users(boiler.UserWhere.GoogleID.EQ(null.StringFrom(req.Sub))).One(tx)
 	// no user
 	if errors.Is(err, sql.ErrNoRows) {
-		user := &boiler.User{
-			GoogleID:   null.StringFrom(req.Sub),
-			Email:      null.StringFrom(strings.ToLower(req.Email)),
-			Role:       "MEMBER",
-			Name:       req.Name,
-			IsVerified: true,
-		}
+		user.ID = userID.String()
+		user.GoogleID = null.StringFrom(req.Sub)
+		user.Email = null.StringFrom(strings.ToLower(req.Email))
+		user.Role = "MEMBER"
+		user.Name = req.Name
+		user.IsVerified = true
 
 		err := user.Insert(tx, boil.Infer())
 		if err != nil {
 			return http.StatusBadRequest, terror.Error(err, "Unable to create user.")
+		}
+
+		// insert default notification settings
+		notifications, err := boiler.Notifications().All(tx)
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
+
+		for _, notification := range notifications {
+			userNotification := &boiler.UserNotification{
+				UserID:         user.ID,
+				NotificationID: notification.ID,
+			}
+			err = userNotification.Insert(tx, boil.Infer())
+			if err != nil {
+				return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+			}
+		}
+
+		// insert default privacies
+		privacies, err := boiler.Privacies().All(tx)
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
+
+		for _, privacy := range privacies {
+			userPrivacy := &boiler.UserPrivacy{
+				UserID:    user.ID,
+				PrivacyID: privacy.ID,
+			}
+
+			err = userPrivacy.Insert(tx, boil.Infer())
+			if err != nil {
+				return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+			}
 		}
 
 	}
@@ -315,9 +399,7 @@ func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Reque
 		user = userAlt
 	}
 
-	fmt.Println("------", userAlt.ID)
-
-	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
@@ -378,12 +460,117 @@ func (api *APIController) LogoutHandler(w http.ResponseWriter, r *http.Request) 
 	return http.StatusOK, nil
 }
 
-func (api *APIController) FacebookLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// req := &FacebookLoginRequest{}
-	// err := json.NewDecoder(r.Body).Decode(req)
-	// if err != nil {
-	// 	http.Error(w, "Unable to decode Facebook login request.", http.StatusBadRequest)
-	// }
+// FacebookAuthHandler handles Google login and signup
+func (api *APIController) FacebookAuthHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+	req := &FacebookUser{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	userID, err := uuid.NewV4()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	user := &boiler.User{}
+	// check user with Facebook ID
+	userAlt, err := boiler.Users(boiler.UserWhere.FacebookID.EQ(null.StringFrom(req.ID))).One(tx)
+	// no user
+	if errors.Is(err, sql.ErrNoRows) {
+		user.ID = userID.String()
+		user.FacebookID = null.StringFrom(req.ID)
+		user.Email = null.StringFrom(strings.ToLower(req.Email))
+		user.Role = "MEMBER"
+		user.Name = req.Name
+		user.IsVerified = true
+
+		err := user.Insert(tx, boil.Infer())
+		if err != nil {
+			return http.StatusBadRequest, terror.Error(err, "Unable to create user.")
+		}
+
+		// insert default notification settings
+		notifications, err := boiler.Notifications().All(tx)
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
+
+		for _, notification := range notifications {
+			userNotification := &boiler.UserNotification{
+				UserID:         user.ID,
+				NotificationID: notification.ID,
+			}
+			err = userNotification.Insert(tx, boil.Infer())
+			if err != nil {
+				return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+			}
+		}
+
+		// insert default privacies
+		privacies, err := boiler.Privacies().All(tx)
+		if err != nil {
+			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+		}
+
+		for _, privacy := range privacies {
+			userPrivacy := &boiler.UserPrivacy{
+				UserID:    user.ID,
+				PrivacyID: privacy.ID,
+			}
+
+			err = userPrivacy.Insert(tx, boil.Infer())
+			if err != nil {
+				return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+			}
+		}
+
+	}
+
+	if userAlt != nil {
+		user = userAlt
+	}
+
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
+	}
+
+	issueToken := &boiler.IssueToken{
+		ID:        claims.StandardClaims.Id,
+		UserID:    claims.StandardClaims.Subject,
+		Device:    r.Header.Get("X-User-Agent"),
+		CreatedAt: time.Unix(claims.StandardClaims.IssuedAt, 0),
+		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
+	}
+
+	err = issueToken.Insert(tx, boil.Infer())
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	resp := &FacebookAuthResponse{
+		User:  *user,
+		Token: token,
+	}
+
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
+	}
+
+	return http.StatusCreated, nil
 }
 
 func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -395,10 +582,6 @@ func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Reque
 }
 
 func (api *APIController) FacebookSignUpHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (api *APIController) GoogleSignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
@@ -451,7 +634,7 @@ func (api *APIController) ForgotPasswordHandler(w http.ResponseWriter, r *http.R
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
-	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
@@ -551,7 +734,7 @@ func (api *APIController) ConfirmForgotPasswordHandler(w http.ResponseWriter, r 
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
-	token, claims, err := api.GenerateJWTAccessToken(user.ID, api.Auther.JWTSecretByte)
+	token, claims, err := api.GenerateJWTAccessToken(user, api.Auther.JWTSecretByte)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, ErrJWTAccessToken)
 	}
@@ -666,13 +849,8 @@ type Claims struct {
 }
 
 // GenerateJWTAccessToken generates access token which expires in 24 hours
-func (api *APIController) GenerateJWTAccessToken(userID string, jwtSecret []byte) (string, *Claims, error) {
+func (api *APIController) GenerateJWTAccessToken(user *boiler.User, jwtSecret []byte) (string, *Claims, error) {
 	tokenID, err := uuid.NewV4()
-	if err != nil {
-		return "", nil, err
-	}
-
-	user, err := boiler.FindUser(api.Conn, userID)
 	if err != nil {
 		return "", nil, err
 	}
@@ -686,7 +864,7 @@ func (api *APIController) GenerateJWTAccessToken(userID string, jwtSecret []byte
 			Issuer:    "go-jwt-auth",
 			IssuedAt:  time.Now().Unix(),
 			Id:        tokenID.String(),
-			Subject:   userID,
+			Subject:   user.ID,
 		},
 	}
 

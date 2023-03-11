@@ -5,15 +5,20 @@ import {
   FACEBOOK_OAUTH_CLIENT_ID,
   FACEBOOK_OAUTH_REDIRECT_URI,
   FACEBOOK_OAUTH_URL,
+  FACEBOOK_OAUTH_USER_URL,
   GOOGLE_OAUTH_CLIENT_ID,
   GOOGLE_OAUTH_REDIRECT_URI,
   GOOGLE_OAUTH_URL,
   GOOGLE_OAUTH_USER_URL,
 } from "../config";
-import { GoogleUser, SocialType, User } from "../types/types";
+import { FacebookUser, GoogleUser, SocialType, User } from "../types/types";
 
 export function saveOAuthState(key: string, state: string) {
   sessionStorage.setItem(key, state);
+}
+
+export function getOAuthState(key: string) {
+  return sessionStorage.getItem(key);
 }
 
 // generates state for OAuth
@@ -38,6 +43,35 @@ export async function getGoogleUser(token: string): Promise<GoogleUser | null> {
     }
 
     const data: GoogleUser = await res.json();
+    return data;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+// retrieves Facebook user info
+export async function getFacebookUser(
+  token: string
+): Promise<FacebookUser | null> {
+  try {
+    const params = new URLSearchParams({
+      fields: "id,name,email",
+    });
+
+    let res = await fetch(`${FACEBOOK_OAUTH_USER_URL}?${params}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data: FacebookUser = await res.json();
     return data;
   } catch (error) {
     console.log(error);
@@ -131,7 +165,6 @@ export function removeResetTokenFromLocalStorage() {
   localStorage.removeItem("renthome_reset_password_token");
 }
 
-//
 interface JwtPayloadWithCustomClaims extends JwtPayload {
   email: string;
   name: string;

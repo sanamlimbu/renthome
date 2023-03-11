@@ -75,6 +75,12 @@ export interface GoogleUser {
   locale: string;
 }
 
+export interface FacebookUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export interface SocialType {
   name: string;
   bgColor: string;

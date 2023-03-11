@@ -1,12 +1,31 @@
-import { Typography } from "@mui/material";
 import queryString from "query-string";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_ADDRESS } from "../../config";
-import { getGoogleUser } from "../../helpers/auth";
+import { UserContext } from "../../context/user";
+import {
+  getGoogleUser,
+  getOAuthState,
+  saveTokenInLocalStorage,
+} from "../../helpers/auth";
+import { User } from "../../types/types";
+
+interface GoogleAuthResponse {
+  user: User;
+  token: string;
+}
 
 export default function GoogleAuthRedirectPage() {
   const parsed = queryString.parse(window.location.hash);
   const token = parsed.access_token;
+  const state = parsed.state;
+  const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
+
+  if (state !== getOAuthState("GOOGLE_OAUTH_STATE")) {
+    navigate("/");
+  }
+
   useEffect(() => {
     (async function () {
       try {
@@ -20,17 +39,18 @@ export default function GoogleAuthRedirectPage() {
           body: JSON.stringify(googleUser),
         });
 
-        const user = await res.json();
-        console.log(user);
+        if (res.ok) {
+          const data: GoogleAuthResponse = await res.json();
+          saveTokenInLocalStorage(data.token);
+          setUser(data.user);
+          navigate("/");
+          console.log(data);
+        }
       } catch (error) {
         console.log(error);
       }
     })();
   }, []);
 
-  return (
-    <>
-      <Typography>Hello Google</Typography>
-    </>
-  );
+  return <></>;
 }

@@ -63,7 +63,6 @@ export default function HomePage() {
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
     setOpenFilter(false);
-    console.log(data);
   };
 
   const rentPriceValues = [

@@ -9,12 +9,10 @@ export const GOOGLE_OAUTH_REDIRECT_URI = "http://localhost:3000/oauth/google";
 // OAuth Facebook
 export const FACEBOOK_OAUTH_CLIENT_ID =
   process.env.REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_ID || "";
-export const FACEBOOK_OAUTH_CLIENT_SECRET =
-  process.env.REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_SECRET || "";
 export const FACEBOOK_OAUTH_URL = "https://www.facebook.com/v16.0/dialog/oauth";
-export const FACEBOOK_OAUTH_TOKEN_URL = "";
-export const FACEBOOK_OAUTH_USER_URL = "";
-export const FACEBOOK_OAUTH_REDIRECT_URI = "http://localhost/oauth/facebook";
+export const FACEBOOK_OAUTH_REDIRECT_URI =
+  "http://localhost:3000/oauth/facebook";
+export const FACEBOOK_OAUTH_USER_URL = "https://graph.facebook.com/me";
 
 // OAuth Apple
 export const APPLE_OAUTH_CLIENT_ID =
