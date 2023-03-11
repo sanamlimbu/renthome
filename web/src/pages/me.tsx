@@ -164,7 +164,7 @@ export function MePage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <EmailOutlined />
-              <Typography>{"sudosanam@gmail.com"}</Typography>
+              <Typography>{user?.email}</Typography>
             </div>
           </div>
           <Button

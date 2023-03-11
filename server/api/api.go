@@ -52,7 +52,6 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 				r.Post("/signup", WithError(api.EmailSignUpHandler))
 				r.Post("/facebook", WithError(api.FacebookAuthHandler))
 				r.Post("/google", WithError(api.GoogleAuthHandler))
-				r.Post("/apple", api.AppleLoginHandler)
 				r.Post("/forgot-password", WithError(api.ForgotPasswordHandler))
 				r.Post("/forgot-password-confirm", WithError(api.ConfirmForgotPasswordHandler))
 				r.Post("/change-password", WithError(WithUser(api, api.ChangePasswordHandler)))

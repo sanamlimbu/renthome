@@ -573,22 +573,6 @@ func (api *APIController) FacebookAuthHandler(w http.ResponseWriter, r *http.Req
 	return http.StatusCreated, nil
 }
 
-func (api *APIController) AppleLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// req := &AppleLoginRequest{}
-	// err := json.NewDecoder(r.Body).Decode(req)
-	// if err != nil {
-	// 	http.Error(w, "Unable to decode Apple login request.", http.StatusBadRequest)
-	// }
-}
-
-func (api *APIController) FacebookSignUpHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (api *APIController) AppleSignUpHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
 type ForgotPasswordRequest struct {
 	Email string `json:"email"`
 }

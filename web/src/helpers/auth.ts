@@ -118,6 +118,7 @@ export function getSocialURL(type: SocialType): string {
       break;
     }
     case "Apple": {
+      // Aborted, Apple Developer Account costs $135 yearly
       break;
     }
   }
