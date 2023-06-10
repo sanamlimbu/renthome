@@ -7,6 +7,7 @@ import (
 	"net/smtp"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aymerick/raymond"
 )
@@ -53,12 +54,14 @@ func NewMailer(username, password, host, port string) (*Mailer, error) {
 	return result, nil
 }
 
-func (mailer *Mailer) SendAccountVerificationCode(reciever, name, code string) error {
+func (mailer *Mailer) SendAccountVerificationCode(reciever, firstName, lastName, code string) error {
 	// Template key should match with HTML template file name
 	templateKey := "reset_password.html"
 
 	plainAuth := smtp.PlainAuth("", mailer.Username, mailer.Password, mailer.Host)
 	hostPort := fmt.Sprintf("%s:%s", mailer.Host, mailer.Port)
+
+	name := strings.TrimSpace(firstName + " " + lastName)
 
 	templateData := map[string]string{
 		"code": code,

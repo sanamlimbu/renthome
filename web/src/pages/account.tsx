@@ -21,19 +21,15 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ADDRESS } from "../config";
 import { UserContext } from "../context/user";
-import {
-  getTokenFromLocalStorage,
-  removeTokenFromLocalStorage,
-} from "../helpers/auth";
+import { getTokenFromLocalStorage } from "../helpers/auth";
 import { isNotificationState, isPrivacyState } from "../helpers/helper";
 import { ErrorResponse, NotificationState, PrivacyState } from "../types/types";
 
-export function MePage() {
+export function AccountPage() {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const { setUser } = useContext(UserContext);
   const [notifications, setNotifications] = useState<NotificationState[]>([]);
   const [privacies, setPrivacies] = useState<PrivacyState[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -98,30 +94,6 @@ export function MePage() {
     setOpenSnackbar(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      const res = await fetch(`${API_ADDRESS}/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getTokenFromLocalStorage()}`,
-        },
-        body: JSON.stringify({ user_id: `${user?.id}` }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message);
-        setOpenSnackbar(true);
-      } else {
-        removeTokenFromLocalStorage();
-        setUser(undefined);
-        setOpenSnackbar(false);
-      }
-    } catch (error) {
-      setOpenSnackbar(true);
-    }
-  };
-
   const updateNotifications = (notificationState: NotificationState) => {
     const newNotifications = notifications.map((ns) => {
       if (ns.notification.id === notificationState.notification.id) {
@@ -144,18 +116,9 @@ export function MePage() {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography sx={{ fontWeight: "700", fontSize: "28px" }}>
-          Account overview
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{ textTransform: "none", fontWeight: "700" }}
-          onClick={handleLogout}
-        >
-          Log out
-        </Button>
-      </div>
+      <Typography sx={{ fontWeight: "700", fontSize: "28px" }}>
+        Account overview
+      </Typography>
       <div>
         <Typography fontWeight={"600"} paddingBottom="10px">
           Email

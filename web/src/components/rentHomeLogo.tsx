@@ -12,7 +12,9 @@ export default function RentHomeLogo() {
       sx={{ cursor: "pointer" }}
     >
       <Home color="primary" fontSize="large" />
-      <span style={{ fontWeight: "700", fontSize: "22px" }}>renthome.com</span>
+      <span style={{ fontWeight: "700", fontSize: "22px" }}>
+        renthome.com.au
+      </span>
     </Typography>
   );
 }

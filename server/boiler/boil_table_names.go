@@ -4,8 +4,10 @@
 package boiler
 
 var TableNames = struct {
+	Agencies          string
 	Blobs             string
 	IssueTokens       string
+	Managers          string
 	Notifications     string
 	PasswordHashes    string
 	Privacies         string
@@ -17,8 +19,10 @@ var TableNames = struct {
 	UserPrivacies     string
 	Users             string
 }{
+	Agencies:          "agencies",
 	Blobs:             "blobs",
 	IssueTokens:       "issue_tokens",
+	Managers:          "managers",
 	Notifications:     "notifications",
 	PasswordHashes:    "password_hashes",
 	Privacies:         "privacies",
