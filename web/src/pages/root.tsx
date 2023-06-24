@@ -28,13 +28,13 @@ export default function RootPage() {
       <NavBar />
       <Box
         sx={{
-          padding: padding,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           background: "rgb(246,245,247)",
         }}
       >
-        <Box>
-          <Outlet />
-        </Box>
+        <Outlet />
       </Box>
       <Footer />
     </>
