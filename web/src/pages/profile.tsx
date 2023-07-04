@@ -50,7 +50,12 @@ export default function ProfilePage() {
     }
   };
   return (
-    <Box>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: "60rem",
+      }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -176,7 +181,7 @@ function ProfileCard({
   return (
     <Box
       sx={{
-        padding: "2em",
+        padding: "1em",
         background: "white",
         borderRadius: "12px",
         boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.16)",

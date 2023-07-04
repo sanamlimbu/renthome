@@ -8,7 +8,12 @@ export default function RenterProfile() {
   const navigate = useNavigate();
   const link = "rent/renter-profile";
   return (
-    <Box>
+    <Box
+      sx={{
+        marginTop: "1em",
+        marginBottom: "1em",
+      }}
+    >
       <Box
         sx={{
           display: "flex",

@@ -64,9 +64,7 @@ func main() {
 					&cli.StringFlag{Name: "rootpath", Value: "../web/dist", EnvVars: []string{"RENTHOME_ROOTPATH"}, Usage: "folder path of index.html"},
 					&cli.StringFlag{Name: "jwtsecret", Value: "a35eab71-f691-4dc3-98e5-980bda774fa0", EnvVars: []string{"RENTHOME_USERAUTH_JWTSECRET"}, Usage: "JWT secret"},
 					&cli.StringFlag{Name: "google_client_id", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_ID"}, Usage: "Google Client ID for OAuth functionaility."},
-					&cli.StringFlag{Name: "google_client_secret", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_SECRET"}, Usage: "Google Client Secret for OAuth functionaility."},
 					&cli.StringFlag{Name: "facebook_client_id", Value: "", EnvVars: []string{"RENTHOME_FACEBOOK_CLIENT_ID"}, Usage: "Facebook Client ID for OAuth functionaility."},
-					&cli.StringFlag{Name: "apple_client_id", Value: "", EnvVars: []string{"RENTHOME_APPLE_CLIENT_ID"}, Usage: "Apple Client ID for OAuth functionaility."},
 					&cli.BoolFlag{Name: "cookie_secure", Value: false, EnvVars: []string{"RENTHOME_COOKIE_SECURE"}, Usage: "Cookie Secure setting option for secure cookies."},
 
 					&cli.StringFlag{Name: "mail_host", Value: "smtp.gmail.com", EnvVars: []string{"RENTHOME_MAIL_HOST"}, Usage: "Gmail SMTP host address"},
@@ -118,9 +116,7 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	cookieSecure := ctxCLI.Bool("cookie_secure")
 
 	googleClientID := ctxCLI.String("google_client_id")
-
 	facebookClientID := ctxCLI.String("facebook_client_id")
-	appleClientID := ctxCLI.String("apple_client_id")
 
 	databaseUser := ctxCLI.String("database_user")
 	databasePass := ctxCLI.String("database_pass")
@@ -144,7 +140,7 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 		panic(err)
 	}
 
-	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID, appleClientID)
+	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID)
 
 	// db connection
 	conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version, databaseMaxIdleConns, databaseMaxOpenConns)

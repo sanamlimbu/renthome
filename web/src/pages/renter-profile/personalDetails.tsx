@@ -88,6 +88,8 @@ export default function PersonalDetails() {
     <Box
       sx={{
         maxWidth: "34em",
+        marginTop: "1em",
+        marginBottom: "1em",
       }}
     >
       <Typography fontWeight={"bold"}>RENTER PROFILE</Typography>

@@ -55,13 +55,12 @@ type Auther struct {
 	GoogleClientID   string
 }
 
-func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleClientID string, facebookClientID string, appleClientID string) *Auther {
+func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleClientID string, facebookClientID string) *Auther {
 	result := &Auther{
 		TokenExpiryDays:  tokenExpiryDays,
 		JWTSecretByte:    []byte(jwtSecret),
 		CookieSecure:     cookieSecure,
 		FacebookClientID: facebookClientID,
-		AppleClientID:    appleClientID,
 		GoogleClientID:   googleClientID,
 	}
 	return result
