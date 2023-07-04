@@ -55,13 +55,12 @@ type Auther struct {
 	GoogleClientID   string
 }
 
-func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleClientID string, facebookClientID string, appleClientID string) *Auther {
+func NewAuther(tokenExpiryDays int, jwtSecret string, cookieSecure bool, googleClientID string, facebookClientID string) *Auther {
 	result := &Auther{
 		TokenExpiryDays:  tokenExpiryDays,
 		JWTSecretByte:    []byte(jwtSecret),
 		CookieSecure:     cookieSecure,
 		FacebookClientID: facebookClientID,
-		AppleClientID:    appleClientID,
 		GoogleClientID:   googleClientID,
 	}
 	return result
@@ -104,9 +103,10 @@ type GoogleAuthResponse struct {
 }
 
 type FacebookUser struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type FacebookAuthResponse struct {
@@ -350,7 +350,8 @@ func (api *APIController) GoogleAuthHandler(w http.ResponseWriter, r *http.Reque
 		user.GoogleID = null.StringFrom(req.Sub)
 		user.Email = null.StringFrom(strings.ToLower(req.Email))
 		user.Role = "MEMBER"
-		user.Name = req.Name
+		user.FirstName = req.GivenName
+		user.LastName = req.FamilyName
 		user.IsVerified = true
 
 		err := user.Insert(tx, boil.Infer())
@@ -488,7 +489,8 @@ func (api *APIController) FacebookAuthHandler(w http.ResponseWriter, r *http.Req
 		user.FacebookID = null.StringFrom(req.ID)
 		user.Email = null.StringFrom(strings.ToLower(req.Email))
 		user.Role = "MEMBER"
-		user.Name = req.Name
+		user.FirstName = req.FirstName
+		user.LastName = req.LastName
 		user.IsVerified = true
 
 		err := user.Insert(tx, boil.Infer())
@@ -636,7 +638,7 @@ func (api *APIController) ForgotPasswordHandler(w http.ResponseWriter, r *http.R
 		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
 	}
 
-	err = api.Mailer.SendAccountVerificationCode(user.Email.String, user.Name, resetPassword.Code)
+	err = api.Mailer.SendAccountVerificationCode(user.Email.String, user.FirstName, user.LastName, resetPassword.Code)
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, "Unable to send reset code, please try again.")
 	}
@@ -827,7 +829,8 @@ func (api *APIController) ChangeEmailHandler(w http.ResponseWriter, r *http.Requ
 
 type Claims struct {
 	Email      string `json:"email"`
-	Name       string `json:"name"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
 	IsVerified bool   `json:"is_verified"`
 	jwt.StandardClaims
 }
@@ -841,7 +844,8 @@ func (api *APIController) GenerateJWTAccessToken(user *boiler.User, jwtSecret []
 
 	claims := &Claims{
 		Email:      user.Email.String,
-		Name:       user.Name,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
 		IsVerified: user.IsVerified,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),

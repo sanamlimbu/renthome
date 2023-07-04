@@ -75,9 +75,9 @@ func main() {
 					g.Add(run.SignalHandler(ctx, os.Interrupt))
 					// start the seed
 					g.Add(func() error { return SeedFunc(c, ctx) }, func(err error) {
-						// if err != nil {
-						// 	fmt.Println(terror.Echo(err))
-						// }
+						if err != nil {
+							fmt.Println(terror.Echo(err))
+						}
 						cancel()
 					})
 
@@ -195,7 +195,8 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 	// Insert superadmin
 	superAdmin := &boiler.User{
 		ID:          superadminID,
-		Name:        "Super Admin",
+		FirstName:   "Nancy",
+		LastName:    "Smith",
 		Email:       null.StringFrom("superadmin@example.com"),
 		Title:       null.StringFrom("Developer"),
 		Description: null.StringFrom("Developer of renthome.com"),
@@ -221,7 +222,8 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 	// Insert member
 	member := &boiler.User{
 		ID:          memberID,
-		Name:        "Member",
+		FirstName:   "John",
+		LastName:    "Doe",
 		Email:       null.StringFrom("member@example.com"),
 		Title:       null.StringFrom("Registered Nurse"),
 		Description: null.StringFrom("Member of renthome.com"),

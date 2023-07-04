@@ -16,24 +16,58 @@ CREATE TABLE blobs
     deleted_at      TIMESTAMPTZ
 ); 
 
+/*************
+ *  Agencies  *
+ *************/
+
+ CREATE TABLE agencies
+ (
+    id          UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT        NOT NULL,
+    color       TEXT        NOT NULL,
+    logo_id     UUID REFERENCES blobs (id),  
+    image_id    UUID REFERENCES blobs (id),      
+    created_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
+ );
+
+ /*************
+ *  Managers  *
+ *************/
+
+ CREATE TABLE managers
+ (
+    id          UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(), 
+    agency_id   UUID        NOT NULL REFERENCES  agencies (id),     
+    created_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
+ );
+
+
 /******************
  *  Users  *
  ******************/
  CREATE TABLE users 
  (
     id                      UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    name                    TEXT             NOT NULL DEFAULT '',
+    first_name              TEXT             NOT NULL DEFAULT '',
+    last_name               TEXT             NOT NULL DEFAULT '',
     email                   TEXT UNIQUE,
     facebook_id             TEXT UNIQUE,
     google_id               TEXT UNIQUE,
     apple_id                TEXT UNIQUE,
     title                   TEXT                      DEFAULT '',
     description             TEXT                      DEFAULT '',
-    role                    TEXT             NOT NULL CHECK (role IN ('MEMBER', 'MANAGER', 'ADMIN')), 
+    role                    TEXT             NOT NULL CHECK (role IN ('MEMBER', 'MANAGER', 'ADMIN', 'AGENCY')), 
     mobile                  TEXT                      DEFAULT '',
     is_verified             BOOLEAN          NOT NULL DEFAULT FALSE,
     old_password_required   BOOLEAN          NOT NULL DEFAULT TRUE, -- set to false on password reset request, set back to true on password change
     avatar_id               UUID REFERENCES blobs (id),
+    agency_id               UUID REFERENCES agencies (id),
+    is_agency               BOOLEAN         NOT NULL DEFAULT FALSE,
+    manager_id              UUID REFERENCES managers (id),
     keywords                TSVECTOR,
     created_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
@@ -68,7 +102,8 @@ DECLARE
     temp TSVECTOR;
 BEGIN
     SELECT (
-            SETWEIGHT(TO_TSVECTOR('english', NEW.name), 'A') ||
+            SETWEIGHT(TO_TSVECTOR('english', NEW.first_name), 'A') ||
+            SETWEIGHT(TO_TSVECTOR('english', NEW.last_name), 'A') ||
             SETWEIGHT(TO_TSVECTOR('english', COALESCE(NEW.email, '')), 'A')
             )
     INTO temp;
@@ -131,6 +166,9 @@ CREATE TABLE reset_passwords
     is_furnished        BOOLEAN     NOT NULL,
     is_pets_considered  BOOLEAN     NOT NULL,
     available_at        TIMESTAMPTZ NOT NULL,
+    open_at             TIMESTAMPTZ,
+    agency_id           UUID        NOT NULL REFERENCES agencies (id),
+    manager_id          UUID        NOT NULL REFERENCES managers (id),
     keywords            TSVECTOR,
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),

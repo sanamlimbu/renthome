@@ -1,0 +1,36 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <filter id="filter0_d" x="3" y="10" width="54" height="49.6745" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+            <feOffset dy="2" />
+            <feGaussianBlur stdDeviation="1" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.18 0" />
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+        </filter>
+        <mask id="mask0" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="60" height="60">
+            <circle cx="30" cy="30" r="30" fill="#F4F7FB" />
+        </mask>
+    </defs>
+    <g mask="url(#mask0)">
+        <circle cx="30" cy="30" r="30" fill="#F4F7FB" />
+        <g filter="url(#filter0_d)">
+            <rect x="12" y="10" width="36" height="30" fill="white" />
+            <rect x="16" y="14" width="28" height="2" fill="#EBEBEB" />
+            <rect x="16" y="18" width="28" height="2" fill="#EBEBEB" />
+            <rect x="16" y="22" width="28" height="2" fill="#EBEBEB" />
+            <rect x="16" y="26" width="28" height="2" fill="#EBEBEB" />
+            <path d="M5 31.1433C5 28.9342 6.79086 27.1433 9 27.1433H32.7073C33.8428 27.1433 34.9247 26.6607 35.6834 25.8159L38.5362 22.639C39.2949 21.7941 40.3769 21.3115 41.5124 21.3115H51C53.2091 21.3115 55 23.1024 55 25.3115V51.6745C55 53.8836 53.2091 55.6745 51 55.6745H9C6.79086 55.6745 5 53.8836 5 51.6745V31.1433Z" fill="#80A8E4" />
+            <circle cx="19.5" cy="40.5" r="5.5" fill="#EBEBEB" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M13.4062 40.4547C13.4062 42.2642 14.233 43.8806 15.5294 44.9467C15.5232 44.8594 15.5201 44.7712 15.5201 44.6824C15.5201 42.6394 17.1763 40.9832 19.2193 40.9832C21.2623 40.9832 22.9184 42.6394 22.9184 44.6824C22.9184 44.7712 22.9153 44.8594 22.9091 44.9467C24.2055 43.8806 25.0323 42.2642 25.0323 40.4547C25.0323 37.2443 22.4297 34.6417 19.2193 34.6417C16.0088 34.6417 13.4062 37.2443 13.4062 40.4547ZM21.3331 38.8694C21.3331 40.0368 20.3867 40.9832 19.2193 40.9832C18.0518 40.9832 17.1054 40.0368 17.1054 38.8694C17.1054 37.7019 18.0518 36.7555 19.2193 36.7555C20.3867 36.7555 21.3331 37.7019 21.3331 38.8694Z" fill="#434343" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M19.2193 46.2677C22.4297 46.2677 25.0323 43.6652 25.0323 40.4547C25.0323 37.2443 22.4297 34.6417 19.2193 34.6417C16.0088 34.6417 13.4062 37.2443 13.4062 40.4547C13.4062 43.6652 16.0088 46.2677 19.2193 46.2677Z" stroke="#434343" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="29.3667" y1="36.1496" x2="48.3911" y2="36.1496" stroke="#434343" />
+            <line x1="29.3667" y1="39.9553" x2="48.3911" y2="39.9553" stroke="#434343" />
+            <circle cx="31.2691" cy="44.894" r="1.90244" fill="#434343" />
+            <circle cx="46.4884" cy="44.894" r="1.90244" fill="#434343" />
+            <circle cx="38.8766" cy="44.894" r="1.90244" fill="#434343" />
+        </g>
+    </g>
+</svg>

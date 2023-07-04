@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { UserContext } from "../context/user";
+import { AccountPage } from "../pages/account";
 import ConfirmForgotPasswordPage from "../pages/auth/confirmForgotPassword";
 import EmailUpdatePage from "../pages/auth/emailUpdate";
 import FacebookAuthRedirectPage from "../pages/auth/facebookAuth";
@@ -17,13 +18,16 @@ import SignupPage from "../pages/auth/signup";
 import BuyPage from "../pages/buy";
 import FindAgentPage from "../pages/findAgent";
 import HomePage from "../pages/home";
-import { MePage } from "../pages/me";
+import ProfilePage from "../pages/profile";
 import RentPage from "../pages/rent";
+import PersonalDetails from "../pages/renter-profile/personalDetails";
+import RenterProfile from "../pages/renterProfile";
 import RootPage from "../pages/root";
 import SoldPage from "../pages/sold";
 
 export default function RoutesProvider() {
   const { user } = useContext(UserContext);
+
   const router = createBrowserRouter([
     {
       path: "/",
@@ -34,17 +38,36 @@ export default function RoutesProvider() {
           element: <HomePage />,
         },
         {
+          path: "/my-real-estate/account",
+          element: (
+            <RequireAuth>
+              <AccountPage />
+            </RequireAuth>
+          ),
+        },
+        {
           path: "/me",
-          element:
-            user === undefined ? (
-              <Navigate to="/login" replace={true} />
-            ) : (
-              <MePage />
-            ),
+          element: (
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          ),
         },
         {
           path: "rent",
           element: <RentPage />,
+        },
+        {
+          path: "rent/renter-profile",
+          element: (
+            <RequireAuth>
+              <RenterProfile />
+            </RequireAuth>
+          ),
+        },
+        {
+          path: "rent/renter-profile/personal-details",
+          element: <PersonalDetails />,
         },
         {
           path: "/sold",
@@ -78,26 +101,26 @@ export default function RoutesProvider() {
     },
     {
       path: "/password-update",
-      element: user ? (
-        <PasswordUpdatePage />
-      ) : (
-        <Navigate to="/login" replace={true} />
+      element: (
+        <RequireAuth>
+          <PasswordUpdatePage />
+        </RequireAuth>
       ),
     },
     {
       path: "/email-update",
-      element: user ? (
-        <EmailUpdatePage />
-      ) : (
-        <Navigate to="/login" replace={true} />
+      element: (
+        <RequireAuth>
+          <EmailUpdatePage />
+        </RequireAuth>
       ),
     },
     {
       path: "/signout-all",
-      element: user ? (
-        <SignoutAllPage />
-      ) : (
-        <Navigate to="/login" replace={true} />
+      element: (
+        <RequireAuth>
+          <SignoutAllPage />
+        </RequireAuth>
       ),
     },
     {
@@ -115,3 +138,13 @@ export default function RoutesProvider() {
     </>
   );
 }
+
+const RequireAuth = (props: { children: JSX.Element }) => {
+  const { user } = useContext(UserContext);
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  } else {
+    return props.children;
+  }
+};

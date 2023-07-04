@@ -15,6 +15,7 @@ const UserContext = React.createContext<IUserContext>({} as IUserContext);
 
 const UserContextProvider = (props: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | undefined>(getUserFromToken());
+
   useEffect(() => {
     if (!user) {
       return;

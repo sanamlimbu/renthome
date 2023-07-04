@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ADDRESS } from "../../config";
 import { UserContext } from "../../context/user";
@@ -15,7 +15,7 @@ interface GoogleAuthResponse {
   token: string;
 }
 
-export default function GoogleAuthRedirectPage() {
+function GoogleAuthRedirectPage() {
   const parsed = queryString.parse(window.location.hash);
   const token = parsed.access_token;
   const state = parsed.state;
@@ -25,6 +25,8 @@ export default function GoogleAuthRedirectPage() {
   if (state !== getOAuthState("GOOGLE_OAUTH_STATE")) {
     navigate("/");
   }
+
+  console.log("hello");
 
   useEffect(() => {
     (async function () {
@@ -44,7 +46,6 @@ export default function GoogleAuthRedirectPage() {
           saveTokenInLocalStorage(data.token);
           setUser(data.user);
           navigate("/");
-          console.log(data);
         }
       } catch (error) {
         console.log(error);
@@ -54,3 +55,5 @@ export default function GoogleAuthRedirectPage() {
 
   return <></>;
 }
+
+export default React.memo(GoogleAuthRedirectPage);

@@ -24,7 +24,8 @@ import (
 // User is an object representing the database table.
 type User struct {
 	ID                  string      `boiler:"id" boil:"id" json:"id" toml:"id" yaml:"id"`
-	Name                string      `boiler:"name" boil:"name" json:"name" toml:"name" yaml:"name"`
+	FirstName           string      `boiler:"first_name" boil:"first_name" json:"first_name" toml:"first_name" yaml:"first_name"`
+	LastName            string      `boiler:"last_name" boil:"last_name" json:"last_name" toml:"last_name" yaml:"last_name"`
 	Email               null.String `boiler:"email" boil:"email" json:"email,omitempty" toml:"email" yaml:"email,omitempty"`
 	FacebookID          null.String `boiler:"facebook_id" boil:"facebook_id" json:"facebook_id,omitempty" toml:"facebook_id" yaml:"facebook_id,omitempty"`
 	GoogleID            null.String `boiler:"google_id" boil:"google_id" json:"google_id,omitempty" toml:"google_id" yaml:"google_id,omitempty"`
@@ -36,6 +37,9 @@ type User struct {
 	IsVerified          bool        `boiler:"is_verified" boil:"is_verified" json:"is_verified" toml:"is_verified" yaml:"is_verified"`
 	OldPasswordRequired bool        `boiler:"old_password_required" boil:"old_password_required" json:"old_password_required" toml:"old_password_required" yaml:"old_password_required"`
 	AvatarID            null.String `boiler:"avatar_id" boil:"avatar_id" json:"avatar_id,omitempty" toml:"avatar_id" yaml:"avatar_id,omitempty"`
+	AgencyID            null.String `boiler:"agency_id" boil:"agency_id" json:"agency_id,omitempty" toml:"agency_id" yaml:"agency_id,omitempty"`
+	IsAgency            bool        `boiler:"is_agency" boil:"is_agency" json:"is_agency" toml:"is_agency" yaml:"is_agency"`
+	ManagerID           null.String `boiler:"manager_id" boil:"manager_id" json:"manager_id,omitempty" toml:"manager_id" yaml:"manager_id,omitempty"`
 	Keywords            null.String `boiler:"keywords" boil:"keywords" json:"keywords,omitempty" toml:"keywords" yaml:"keywords,omitempty"`
 	CreatedAt           time.Time   `boiler:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt           time.Time   `boiler:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -47,7 +51,8 @@ type User struct {
 
 var UserColumns = struct {
 	ID                  string
-	Name                string
+	FirstName           string
+	LastName            string
 	Email               string
 	FacebookID          string
 	GoogleID            string
@@ -59,13 +64,17 @@ var UserColumns = struct {
 	IsVerified          string
 	OldPasswordRequired string
 	AvatarID            string
+	AgencyID            string
+	IsAgency            string
+	ManagerID           string
 	Keywords            string
 	CreatedAt           string
 	UpdatedAt           string
 	DeletedAt           string
 }{
 	ID:                  "id",
-	Name:                "name",
+	FirstName:           "first_name",
+	LastName:            "last_name",
 	Email:               "email",
 	FacebookID:          "facebook_id",
 	GoogleID:            "google_id",
@@ -77,6 +86,9 @@ var UserColumns = struct {
 	IsVerified:          "is_verified",
 	OldPasswordRequired: "old_password_required",
 	AvatarID:            "avatar_id",
+	AgencyID:            "agency_id",
+	IsAgency:            "is_agency",
+	ManagerID:           "manager_id",
 	Keywords:            "keywords",
 	CreatedAt:           "created_at",
 	UpdatedAt:           "updated_at",
@@ -85,7 +97,8 @@ var UserColumns = struct {
 
 var UserTableColumns = struct {
 	ID                  string
-	Name                string
+	FirstName           string
+	LastName            string
 	Email               string
 	FacebookID          string
 	GoogleID            string
@@ -97,13 +110,17 @@ var UserTableColumns = struct {
 	IsVerified          string
 	OldPasswordRequired string
 	AvatarID            string
+	AgencyID            string
+	IsAgency            string
+	ManagerID           string
 	Keywords            string
 	CreatedAt           string
 	UpdatedAt           string
 	DeletedAt           string
 }{
 	ID:                  "users.id",
-	Name:                "users.name",
+	FirstName:           "users.first_name",
+	LastName:            "users.last_name",
 	Email:               "users.email",
 	FacebookID:          "users.facebook_id",
 	GoogleID:            "users.google_id",
@@ -115,6 +132,9 @@ var UserTableColumns = struct {
 	IsVerified:          "users.is_verified",
 	OldPasswordRequired: "users.old_password_required",
 	AvatarID:            "users.avatar_id",
+	AgencyID:            "users.agency_id",
+	IsAgency:            "users.is_agency",
+	ManagerID:           "users.manager_id",
 	Keywords:            "users.keywords",
 	CreatedAt:           "users.created_at",
 	UpdatedAt:           "users.updated_at",
@@ -125,7 +145,8 @@ var UserTableColumns = struct {
 
 var UserWhere = struct {
 	ID                  whereHelperstring
-	Name                whereHelperstring
+	FirstName           whereHelperstring
+	LastName            whereHelperstring
 	Email               whereHelpernull_String
 	FacebookID          whereHelpernull_String
 	GoogleID            whereHelpernull_String
@@ -137,13 +158,17 @@ var UserWhere = struct {
 	IsVerified          whereHelperbool
 	OldPasswordRequired whereHelperbool
 	AvatarID            whereHelpernull_String
+	AgencyID            whereHelpernull_String
+	IsAgency            whereHelperbool
+	ManagerID           whereHelpernull_String
 	Keywords            whereHelpernull_String
 	CreatedAt           whereHelpertime_Time
 	UpdatedAt           whereHelpertime_Time
 	DeletedAt           whereHelpernull_Time
 }{
 	ID:                  whereHelperstring{field: "\"users\".\"id\""},
-	Name:                whereHelperstring{field: "\"users\".\"name\""},
+	FirstName:           whereHelperstring{field: "\"users\".\"first_name\""},
+	LastName:            whereHelperstring{field: "\"users\".\"last_name\""},
 	Email:               whereHelpernull_String{field: "\"users\".\"email\""},
 	FacebookID:          whereHelpernull_String{field: "\"users\".\"facebook_id\""},
 	GoogleID:            whereHelpernull_String{field: "\"users\".\"google_id\""},
@@ -155,6 +180,9 @@ var UserWhere = struct {
 	IsVerified:          whereHelperbool{field: "\"users\".\"is_verified\""},
 	OldPasswordRequired: whereHelperbool{field: "\"users\".\"old_password_required\""},
 	AvatarID:            whereHelpernull_String{field: "\"users\".\"avatar_id\""},
+	AgencyID:            whereHelpernull_String{field: "\"users\".\"agency_id\""},
+	IsAgency:            whereHelperbool{field: "\"users\".\"is_agency\""},
+	ManagerID:           whereHelpernull_String{field: "\"users\".\"manager_id\""},
 	Keywords:            whereHelpernull_String{field: "\"users\".\"keywords\""},
 	CreatedAt:           whereHelpertime_Time{field: "\"users\".\"created_at\""},
 	UpdatedAt:           whereHelpertime_Time{field: "\"users\".\"updated_at\""},
@@ -163,14 +191,18 @@ var UserWhere = struct {
 
 // UserRels is where relationship names are stored.
 var UserRels = struct {
+	Agency            string
 	Avatar            string
+	Manager           string
 	PasswordHash      string
 	ResetPassword     string
 	IssueTokens       string
 	UserNotifications string
 	UserPrivacies     string
 }{
+	Agency:            "Agency",
 	Avatar:            "Avatar",
+	Manager:           "Manager",
 	PasswordHash:      "PasswordHash",
 	ResetPassword:     "ResetPassword",
 	IssueTokens:       "IssueTokens",
@@ -180,7 +212,9 @@ var UserRels = struct {
 
 // userR is where relationships are stored.
 type userR struct {
+	Agency            *Agency               `boiler:"Agency" boil:"Agency" json:"Agency" toml:"Agency" yaml:"Agency"`
 	Avatar            *Blob                 `boiler:"Avatar" boil:"Avatar" json:"Avatar" toml:"Avatar" yaml:"Avatar"`
+	Manager           *Manager              `boiler:"Manager" boil:"Manager" json:"Manager" toml:"Manager" yaml:"Manager"`
 	PasswordHash      *PasswordHash         `boiler:"PasswordHash" boil:"PasswordHash" json:"PasswordHash" toml:"PasswordHash" yaml:"PasswordHash"`
 	ResetPassword     *ResetPassword        `boiler:"ResetPassword" boil:"ResetPassword" json:"ResetPassword" toml:"ResetPassword" yaml:"ResetPassword"`
 	IssueTokens       IssueTokenSlice       `boiler:"IssueTokens" boil:"IssueTokens" json:"IssueTokens" toml:"IssueTokens" yaml:"IssueTokens"`
@@ -193,11 +227,25 @@ func (*userR) NewStruct() *userR {
 	return &userR{}
 }
 
+func (r *userR) GetAgency() *Agency {
+	if r == nil {
+		return nil
+	}
+	return r.Agency
+}
+
 func (r *userR) GetAvatar() *Blob {
 	if r == nil {
 		return nil
 	}
 	return r.Avatar
+}
+
+func (r *userR) GetManager() *Manager {
+	if r == nil {
+		return nil
+	}
+	return r.Manager
 }
 
 func (r *userR) GetPasswordHash() *PasswordHash {
@@ -239,9 +287,9 @@ func (r *userR) GetUserPrivacies() UserPrivacySlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "name", "email", "facebook_id", "google_id", "apple_id", "title", "description", "role", "mobile", "is_verified", "old_password_required", "avatar_id", "keywords", "created_at", "updated_at", "deleted_at"}
+	userAllColumns            = []string{"id", "first_name", "last_name", "email", "facebook_id", "google_id", "apple_id", "title", "description", "role", "mobile", "is_verified", "old_password_required", "avatar_id", "agency_id", "is_agency", "manager_id", "keywords", "created_at", "updated_at", "deleted_at"}
 	userColumnsWithoutDefault = []string{"role"}
-	userColumnsWithDefault    = []string{"id", "name", "email", "facebook_id", "google_id", "apple_id", "title", "description", "mobile", "is_verified", "old_password_required", "avatar_id", "keywords", "created_at", "updated_at", "deleted_at"}
+	userColumnsWithDefault    = []string{"id", "first_name", "last_name", "email", "facebook_id", "google_id", "apple_id", "title", "description", "mobile", "is_verified", "old_password_required", "avatar_id", "agency_id", "is_agency", "manager_id", "keywords", "created_at", "updated_at", "deleted_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}
 )
@@ -488,6 +536,17 @@ func (q userQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
+// Agency pointed to by the foreign key.
+func (o *User) Agency(mods ...qm.QueryMod) agencyQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.AgencyID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Agencies(queryMods...)
+}
+
 // Avatar pointed to by the foreign key.
 func (o *User) Avatar(mods ...qm.QueryMod) blobQuery {
 	queryMods := []qm.QueryMod{
@@ -497,6 +556,17 @@ func (o *User) Avatar(mods ...qm.QueryMod) blobQuery {
 	queryMods = append(queryMods, mods...)
 
 	return Blobs(queryMods...)
+}
+
+// Manager pointed to by the foreign key.
+func (o *User) Manager(mods ...qm.QueryMod) managerQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.ManagerID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Managers(queryMods...)
 }
 
 // PasswordHash pointed to by the foreign key.
@@ -561,6 +631,131 @@ func (o *User) UserPrivacies(mods ...qm.QueryMod) userPrivacyQuery {
 	)
 
 	return UserPrivacies(queryMods...)
+}
+
+// LoadAgency allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userL) LoadAgency(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		if !queries.IsNil(object.AgencyID) {
+			args = append(args, object.AgencyID)
+		}
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.AgencyID) {
+					continue Outer
+				}
+			}
+
+			if !queries.IsNil(obj.AgencyID) {
+				args = append(args, obj.AgencyID)
+			}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`agencies`),
+		qm.WhereIn(`agencies.id in ?`, args...),
+		qmhelper.WhereIsNull(`agencies.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Agency")
+	}
+
+	var resultSlice []*Agency
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Agency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for agencies")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for agencies")
+	}
+
+	if len(agencyAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Agency = foreign
+		if foreign.R == nil {
+			foreign.R = &agencyR{}
+		}
+		foreign.R.Users = append(foreign.R.Users, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.AgencyID, foreign.ID) {
+				local.R.Agency = foreign
+				if foreign.R == nil {
+					foreign.R = &agencyR{}
+				}
+				foreign.R.Users = append(foreign.R.Users, local)
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadAvatar allows an eager lookup of values, cached into the
@@ -680,6 +875,131 @@ func (userL) LoadAvatar(e boil.Executor, singular bool, maybeUser interface{}, m
 					foreign.R = &blobR{}
 				}
 				foreign.R.AvatarUsers = append(foreign.R.AvatarUsers, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadManager allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userL) LoadManager(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		if !queries.IsNil(object.ManagerID) {
+			args = append(args, object.ManagerID)
+		}
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ManagerID) {
+					continue Outer
+				}
+			}
+
+			if !queries.IsNil(obj.ManagerID) {
+				args = append(args, obj.ManagerID)
+			}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`managers`),
+		qm.WhereIn(`managers.id in ?`, args...),
+		qmhelper.WhereIsNull(`managers.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Manager")
+	}
+
+	var resultSlice []*Manager
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Manager")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for managers")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for managers")
+	}
+
+	if len(managerAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Manager = foreign
+		if foreign.R == nil {
+			foreign.R = &managerR{}
+		}
+		foreign.R.Users = append(foreign.R.Users, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.ManagerID, foreign.ID) {
+				local.R.Manager = foreign
+				if foreign.R == nil {
+					foreign.R = &managerR{}
+				}
+				foreign.R.Users = append(foreign.R.Users, local)
 				break
 			}
 		}
@@ -1266,6 +1586,85 @@ func (userL) LoadUserPrivacies(e boil.Executor, singular bool, maybeUser interfa
 	return nil
 }
 
+// SetAgency of the user to the related item.
+// Sets o.R.Agency to related.
+// Adds o to related.R.Users.
+func (o *User) SetAgency(exec boil.Executor, insert bool, related *Agency) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"users\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"agency_id"}),
+		strmangle.WhereClause("\"", "\"", 2, userPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.AgencyID, related.ID)
+	if o.R == nil {
+		o.R = &userR{
+			Agency: related,
+		}
+	} else {
+		o.R.Agency = related
+	}
+
+	if related.R == nil {
+		related.R = &agencyR{
+			Users: UserSlice{o},
+		}
+	} else {
+		related.R.Users = append(related.R.Users, o)
+	}
+
+	return nil
+}
+
+// RemoveAgency relationship.
+// Sets o.R.Agency to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *User) RemoveAgency(exec boil.Executor, related *Agency) error {
+	var err error
+
+	queries.SetScanner(&o.AgencyID, nil)
+	if _, err = o.Update(exec, boil.Whitelist("agency_id")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.Agency = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.Users {
+		if queries.Equal(o.AgencyID, ri.AgencyID) {
+			continue
+		}
+
+		ln := len(related.R.Users)
+		if ln > 1 && i < ln-1 {
+			related.R.Users[i] = related.R.Users[ln-1]
+		}
+		related.R.Users = related.R.Users[:ln-1]
+		break
+	}
+	return nil
+}
+
 // SetAvatar of the user to the related item.
 // Sets o.R.Avatar to related.
 // Adds o to related.R.AvatarUsers.
@@ -1340,6 +1739,85 @@ func (o *User) RemoveAvatar(exec boil.Executor, related *Blob) error {
 			related.R.AvatarUsers[i] = related.R.AvatarUsers[ln-1]
 		}
 		related.R.AvatarUsers = related.R.AvatarUsers[:ln-1]
+		break
+	}
+	return nil
+}
+
+// SetManager of the user to the related item.
+// Sets o.R.Manager to related.
+// Adds o to related.R.Users.
+func (o *User) SetManager(exec boil.Executor, insert bool, related *Manager) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"users\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"manager_id"}),
+		strmangle.WhereClause("\"", "\"", 2, userPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.ManagerID, related.ID)
+	if o.R == nil {
+		o.R = &userR{
+			Manager: related,
+		}
+	} else {
+		o.R.Manager = related
+	}
+
+	if related.R == nil {
+		related.R = &managerR{
+			Users: UserSlice{o},
+		}
+	} else {
+		related.R.Users = append(related.R.Users, o)
+	}
+
+	return nil
+}
+
+// RemoveManager relationship.
+// Sets o.R.Manager to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *User) RemoveManager(exec boil.Executor, related *Manager) error {
+	var err error
+
+	queries.SetScanner(&o.ManagerID, nil)
+	if _, err = o.Update(exec, boil.Whitelist("manager_id")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.Manager = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.Users {
+		if queries.Equal(o.ManagerID, ri.ManagerID) {
+			continue
+		}
+
+		ln := len(related.R.Users)
+		if ln > 1 && i < ln-1 {
+			related.R.Users[i] = related.R.Users[ln-1]
+		}
+		related.R.Users = related.R.Users[:ln-1]
 		break
 	}
 	return nil

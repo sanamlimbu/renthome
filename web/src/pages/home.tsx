@@ -11,6 +11,7 @@ import {
   FormGroup,
   IconButton,
   InputAdornment,
+  Link,
   MenuItem,
   Select,
   TextField,
@@ -18,7 +19,7 @@ import {
 } from "@mui/material";
 import { useContext, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import Property from "../components/property";
+import HomeLoan from "../assets/homeloan.webp";
 import { UserContext } from "../context/user";
 
 interface IFormInput {
@@ -204,6 +205,7 @@ export default function HomePage() {
           </div>
         </Card>
       </Box>
+      <div></div>
 
       {/**
        * Filter dialog box
@@ -503,7 +505,7 @@ export default function HomePage() {
         </form>
       </Dialog>
 
-      <Box
+      {/* <Box
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -516,6 +518,78 @@ export default function HomePage() {
         <Property />
         <Property />
         <Property />
+      </Box> */}
+      <Box>
+        <Typography variant="h2">Explore all things property</Typography>
+        <div>
+          <Button
+            variant="outlined"
+            sx={{
+              borderRadius: "22px",
+              fontWeight: "bold",
+              marginRight: "1em",
+            }}
+          >
+            Buying
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{
+              borderRadius: "22px",
+              fontWeight: "bold",
+              marginRight: "1em",
+            }}
+          >
+            Renting
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{
+              borderRadius: "22px",
+              fontWeight: "bold",
+              marginRight: "1em",
+            }}
+          >
+            Selling
+          </Button>
+          <Button
+            variant="outlined"
+            sx={{
+              borderRadius: "22px",
+              fontWeight: "bold",
+              marginRight: "1em",
+            }}
+          >
+            Researching
+          </Button>
+          <Card variant="outlined" sx={{ maxWidth: "24em" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                margin: "0.8em",
+              }}
+            >
+              <img src={HomeLoan} height={120} />
+            </Box>
+            <Box sx={{ margin: "0 1em 1em 1em" }}>
+              <Typography variant="h3">
+                Get estimated property prices with a realEstimate™
+              </Typography>
+              <Typography
+                sx={{
+                  color: "dimgray",
+                  marginTop: "0.8em",
+                  marginBottom: "0.8em",
+                }}
+              >
+                Show how much your property's worth whether you own it or want
+                to buy it.
+              </Typography>
+              <Link sx={{ fontWeight: "600" }}>Check property values</Link>
+            </Box>
+          </Card>
+        </div>
       </Box>
     </>
   );

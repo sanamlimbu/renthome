@@ -43,13 +43,11 @@ export default function FacebookAuthRedirectPage() {
           },
           body: JSON.stringify(facebookUser),
         });
-        console.log(res);
         if (res.ok) {
           const data: FacebookAuthResponse = await res.json();
           saveTokenInLocalStorage(data.token);
           setUser(data.user);
           navigate("/");
-          console.log(data);
         }
       } catch (error) {
         console.log(error);

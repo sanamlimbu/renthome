@@ -38,6 +38,9 @@ type Property struct {
 	IsFurnished      bool        `boiler:"is_furnished" boil:"is_furnished" json:"is_furnished" toml:"is_furnished" yaml:"is_furnished"`
 	IsPetsConsidered bool        `boiler:"is_pets_considered" boil:"is_pets_considered" json:"is_pets_considered" toml:"is_pets_considered" yaml:"is_pets_considered"`
 	AvailableAt      time.Time   `boiler:"available_at" boil:"available_at" json:"available_at" toml:"available_at" yaml:"available_at"`
+	OpenAt           null.Time   `boiler:"open_at" boil:"open_at" json:"open_at,omitempty" toml:"open_at" yaml:"open_at,omitempty"`
+	AgencyID         string      `boiler:"agency_id" boil:"agency_id" json:"agency_id" toml:"agency_id" yaml:"agency_id"`
+	ManagerID        string      `boiler:"manager_id" boil:"manager_id" json:"manager_id" toml:"manager_id" yaml:"manager_id"`
 	Keywords         null.String `boiler:"keywords" boil:"keywords" json:"keywords,omitempty" toml:"keywords" yaml:"keywords,omitempty"`
 	CreatedAt        time.Time   `boiler:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt        time.Time   `boiler:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -63,6 +66,9 @@ var PropertyColumns = struct {
 	IsFurnished      string
 	IsPetsConsidered string
 	AvailableAt      string
+	OpenAt           string
+	AgencyID         string
+	ManagerID        string
 	Keywords         string
 	CreatedAt        string
 	UpdatedAt        string
@@ -83,6 +89,9 @@ var PropertyColumns = struct {
 	IsFurnished:      "is_furnished",
 	IsPetsConsidered: "is_pets_considered",
 	AvailableAt:      "available_at",
+	OpenAt:           "open_at",
+	AgencyID:         "agency_id",
+	ManagerID:        "manager_id",
 	Keywords:         "keywords",
 	CreatedAt:        "created_at",
 	UpdatedAt:        "updated_at",
@@ -105,6 +114,9 @@ var PropertyTableColumns = struct {
 	IsFurnished      string
 	IsPetsConsidered string
 	AvailableAt      string
+	OpenAt           string
+	AgencyID         string
+	ManagerID        string
 	Keywords         string
 	CreatedAt        string
 	UpdatedAt        string
@@ -125,6 +137,9 @@ var PropertyTableColumns = struct {
 	IsFurnished:      "properties.is_furnished",
 	IsPetsConsidered: "properties.is_pets_considered",
 	AvailableAt:      "properties.available_at",
+	OpenAt:           "properties.open_at",
+	AgencyID:         "properties.agency_id",
+	ManagerID:        "properties.manager_id",
 	Keywords:         "properties.keywords",
 	CreatedAt:        "properties.created_at",
 	UpdatedAt:        "properties.updated_at",
@@ -149,6 +164,9 @@ var PropertyWhere = struct {
 	IsFurnished      whereHelperbool
 	IsPetsConsidered whereHelperbool
 	AvailableAt      whereHelpertime_Time
+	OpenAt           whereHelpernull_Time
+	AgencyID         whereHelperstring
+	ManagerID        whereHelperstring
 	Keywords         whereHelpernull_String
 	CreatedAt        whereHelpertime_Time
 	UpdatedAt        whereHelpertime_Time
@@ -169,6 +187,9 @@ var PropertyWhere = struct {
 	IsFurnished:      whereHelperbool{field: "\"properties\".\"is_furnished\""},
 	IsPetsConsidered: whereHelperbool{field: "\"properties\".\"is_pets_considered\""},
 	AvailableAt:      whereHelpertime_Time{field: "\"properties\".\"available_at\""},
+	OpenAt:           whereHelpernull_Time{field: "\"properties\".\"open_at\""},
+	AgencyID:         whereHelperstring{field: "\"properties\".\"agency_id\""},
+	ManagerID:        whereHelperstring{field: "\"properties\".\"manager_id\""},
 	Keywords:         whereHelpernull_String{field: "\"properties\".\"keywords\""},
 	CreatedAt:        whereHelpertime_Time{field: "\"properties\".\"created_at\""},
 	UpdatedAt:        whereHelpertime_Time{field: "\"properties\".\"updated_at\""},
@@ -177,19 +198,39 @@ var PropertyWhere = struct {
 
 // PropertyRels is where relationship names are stored.
 var PropertyRels = struct {
-	Blobs string
+	Agency  string
+	Manager string
+	Blobs   string
 }{
-	Blobs: "Blobs",
+	Agency:  "Agency",
+	Manager: "Manager",
+	Blobs:   "Blobs",
 }
 
 // propertyR is where relationships are stored.
 type propertyR struct {
-	Blobs BlobSlice `boiler:"Blobs" boil:"Blobs" json:"Blobs" toml:"Blobs" yaml:"Blobs"`
+	Agency  *Agency   `boiler:"Agency" boil:"Agency" json:"Agency" toml:"Agency" yaml:"Agency"`
+	Manager *Manager  `boiler:"Manager" boil:"Manager" json:"Manager" toml:"Manager" yaml:"Manager"`
+	Blobs   BlobSlice `boiler:"Blobs" boil:"Blobs" json:"Blobs" toml:"Blobs" yaml:"Blobs"`
 }
 
 // NewStruct creates a new relationship struct
 func (*propertyR) NewStruct() *propertyR {
 	return &propertyR{}
+}
+
+func (r *propertyR) GetAgency() *Agency {
+	if r == nil {
+		return nil
+	}
+	return r.Agency
+}
+
+func (r *propertyR) GetManager() *Manager {
+	if r == nil {
+		return nil
+	}
+	return r.Manager
 }
 
 func (r *propertyR) GetBlobs() BlobSlice {
@@ -203,9 +244,9 @@ func (r *propertyR) GetBlobs() BlobSlice {
 type propertyL struct{}
 
 var (
-	propertyAllColumns            = []string{"id", "slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "has_aircon", "is_furnished", "is_pets_considered", "available_at", "keywords", "created_at", "updated_at", "deleted_at"}
-	propertyColumnsWithoutDefault = []string{"slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "has_aircon", "is_furnished", "is_pets_considered", "available_at"}
-	propertyColumnsWithDefault    = []string{"id", "keywords", "created_at", "updated_at", "deleted_at"}
+	propertyAllColumns            = []string{"id", "slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "has_aircon", "is_furnished", "is_pets_considered", "available_at", "open_at", "agency_id", "manager_id", "keywords", "created_at", "updated_at", "deleted_at"}
+	propertyColumnsWithoutDefault = []string{"slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "has_aircon", "is_furnished", "is_pets_considered", "available_at", "agency_id", "manager_id"}
+	propertyColumnsWithDefault    = []string{"id", "open_at", "keywords", "created_at", "updated_at", "deleted_at"}
 	propertyPrimaryKeyColumns     = []string{"id"}
 	propertyGeneratedColumns      = []string{}
 )
@@ -452,6 +493,28 @@ func (q propertyQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
+// Agency pointed to by the foreign key.
+func (o *Property) Agency(mods ...qm.QueryMod) agencyQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.AgencyID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Agencies(queryMods...)
+}
+
+// Manager pointed to by the foreign key.
+func (o *Property) Manager(mods ...qm.QueryMod) managerQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.ManagerID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Managers(queryMods...)
+}
+
 // Blobs retrieves all the blob's Blobs with an executor.
 func (o *Property) Blobs(mods ...qm.QueryMod) blobQuery {
 	var queryMods []qm.QueryMod
@@ -465,6 +528,248 @@ func (o *Property) Blobs(mods ...qm.QueryMod) blobQuery {
 	)
 
 	return Blobs(queryMods...)
+}
+
+// LoadAgency allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (propertyL) LoadAgency(e boil.Executor, singular bool, maybeProperty interface{}, mods queries.Applicator) error {
+	var slice []*Property
+	var object *Property
+
+	if singular {
+		var ok bool
+		object, ok = maybeProperty.(*Property)
+		if !ok {
+			object = new(Property)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeProperty))
+			}
+		}
+	} else {
+		s, ok := maybeProperty.(*[]*Property)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeProperty))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &propertyR{}
+		}
+		args = append(args, object.AgencyID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &propertyR{}
+			}
+
+			for _, a := range args {
+				if a == obj.AgencyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.AgencyID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`agencies`),
+		qm.WhereIn(`agencies.id in ?`, args...),
+		qmhelper.WhereIsNull(`agencies.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Agency")
+	}
+
+	var resultSlice []*Agency
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Agency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for agencies")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for agencies")
+	}
+
+	if len(agencyAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Agency = foreign
+		if foreign.R == nil {
+			foreign.R = &agencyR{}
+		}
+		foreign.R.Properties = append(foreign.R.Properties, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.AgencyID == foreign.ID {
+				local.R.Agency = foreign
+				if foreign.R == nil {
+					foreign.R = &agencyR{}
+				}
+				foreign.R.Properties = append(foreign.R.Properties, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadManager allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (propertyL) LoadManager(e boil.Executor, singular bool, maybeProperty interface{}, mods queries.Applicator) error {
+	var slice []*Property
+	var object *Property
+
+	if singular {
+		var ok bool
+		object, ok = maybeProperty.(*Property)
+		if !ok {
+			object = new(Property)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeProperty))
+			}
+		}
+	} else {
+		s, ok := maybeProperty.(*[]*Property)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeProperty))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &propertyR{}
+		}
+		args = append(args, object.ManagerID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &propertyR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ManagerID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ManagerID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`managers`),
+		qm.WhereIn(`managers.id in ?`, args...),
+		qmhelper.WhereIsNull(`managers.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Manager")
+	}
+
+	var resultSlice []*Manager
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Manager")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for managers")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for managers")
+	}
+
+	if len(managerAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Manager = foreign
+		if foreign.R == nil {
+			foreign.R = &managerR{}
+		}
+		foreign.R.Properties = append(foreign.R.Properties, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.ManagerID == foreign.ID {
+				local.R.Manager = foreign
+				if foreign.R == nil {
+					foreign.R = &managerR{}
+				}
+				foreign.R.Properties = append(foreign.R.Properties, local)
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadBlobs allows an eager lookup of values, cached into the
@@ -594,6 +899,98 @@ func (propertyL) LoadBlobs(e boil.Executor, singular bool, maybeProperty interfa
 				break
 			}
 		}
+	}
+
+	return nil
+}
+
+// SetAgency of the property to the related item.
+// Sets o.R.Agency to related.
+// Adds o to related.R.Properties.
+func (o *Property) SetAgency(exec boil.Executor, insert bool, related *Agency) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"properties\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"agency_id"}),
+		strmangle.WhereClause("\"", "\"", 2, propertyPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.AgencyID = related.ID
+	if o.R == nil {
+		o.R = &propertyR{
+			Agency: related,
+		}
+	} else {
+		o.R.Agency = related
+	}
+
+	if related.R == nil {
+		related.R = &agencyR{
+			Properties: PropertySlice{o},
+		}
+	} else {
+		related.R.Properties = append(related.R.Properties, o)
+	}
+
+	return nil
+}
+
+// SetManager of the property to the related item.
+// Sets o.R.Manager to related.
+// Adds o to related.R.Properties.
+func (o *Property) SetManager(exec boil.Executor, insert bool, related *Manager) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"properties\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"manager_id"}),
+		strmangle.WhereClause("\"", "\"", 2, propertyPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.ManagerID = related.ID
+	if o.R == nil {
+		o.R = &propertyR{
+			Manager: related,
+		}
+	} else {
+		o.R.Manager = related
+	}
+
+	if related.R == nil {
+		related.R = &managerR{
+			Properties: PropertySlice{o},
+		}
+	} else {
+		related.R.Properties = append(related.R.Properties, o)
 	}
 
 	return nil
