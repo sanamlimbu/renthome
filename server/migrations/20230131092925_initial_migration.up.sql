@@ -124,6 +124,20 @@ CREATE TRIGGER updateUserKeywords
     FOR EACH ROW
     EXECUTE PROCEDURE updateUserKeywords();
 
+-- medias
+CREATE TABLE medias
+(
+    id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
+    type            TEXT             NOT NULL,
+    path            TEXT             NOT NULL,
+    file_size_bytes BIGINT           NOT NULL,
+    extension       TEXT             NOT NULL,
+    uploader_id     UUID             NOT NULL REFERENCES users (id),
+    created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    deleted_at      TIMESTAMPTZ
+); 
+
 -- password hashes
 CREATE TABLE password_hashes
 (

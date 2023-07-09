@@ -20,7 +20,7 @@ require (
 	golang.org/x/crypto v0.5.0
 )
 
-require github.com/aymerick/raymond v2.0.2+incompatible // indirect
+require github.com/aymerick/raymond v2.0.2+incompatible
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -30,7 +30,7 @@ require (
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/ninja-software/terror v1.0.0
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
