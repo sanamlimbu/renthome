@@ -27,6 +27,7 @@ type Image struct {
 	Path          string    `boiler:"path" boil:"path" json:"path" toml:"path" yaml:"path"`
 	FileSizeBytes int64     `boiler:"file_size_bytes" boil:"file_size_bytes" json:"file_size_bytes" toml:"file_size_bytes" yaml:"file_size_bytes"`
 	Extension     string    `boiler:"extension" boil:"extension" json:"extension" toml:"extension" yaml:"extension"`
+	PropertyID    string    `boiler:"property_id" boil:"property_id" json:"property_id" toml:"property_id" yaml:"property_id"`
 	UploaderID    string    `boiler:"uploader_id" boil:"uploader_id" json:"uploader_id" toml:"uploader_id" yaml:"uploader_id"`
 	CreatedAt     time.Time `boiler:"created_at" boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt     time.Time `boiler:"updated_at" boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -41,6 +42,7 @@ var ImageColumns = struct {
 	Path          string
 	FileSizeBytes string
 	Extension     string
+	PropertyID    string
 	UploaderID    string
 	CreatedAt     string
 	UpdatedAt     string
@@ -50,6 +52,7 @@ var ImageColumns = struct {
 	Path:          "path",
 	FileSizeBytes: "file_size_bytes",
 	Extension:     "extension",
+	PropertyID:    "property_id",
 	UploaderID:    "uploader_id",
 	CreatedAt:     "created_at",
 	UpdatedAt:     "updated_at",
@@ -61,6 +64,7 @@ var ImageTableColumns = struct {
 	Path          string
 	FileSizeBytes string
 	Extension     string
+	PropertyID    string
 	UploaderID    string
 	CreatedAt     string
 	UpdatedAt     string
@@ -70,6 +74,7 @@ var ImageTableColumns = struct {
 	Path:          "images.path",
 	FileSizeBytes: "images.file_size_bytes",
 	Extension:     "images.extension",
+	PropertyID:    "images.property_id",
 	UploaderID:    "images.uploader_id",
 	CreatedAt:     "images.created_at",
 	UpdatedAt:     "images.updated_at",
@@ -83,6 +88,7 @@ var ImageWhere = struct {
 	Path          whereHelperstring
 	FileSizeBytes whereHelperint64
 	Extension     whereHelperstring
+	PropertyID    whereHelperstring
 	UploaderID    whereHelperstring
 	CreatedAt     whereHelpertime_Time
 	UpdatedAt     whereHelpertime_Time
@@ -92,6 +98,7 @@ var ImageWhere = struct {
 	Path:          whereHelperstring{field: "\"images\".\"path\""},
 	FileSizeBytes: whereHelperint64{field: "\"images\".\"file_size_bytes\""},
 	Extension:     whereHelperstring{field: "\"images\".\"extension\""},
+	PropertyID:    whereHelperstring{field: "\"images\".\"property_id\""},
 	UploaderID:    whereHelperstring{field: "\"images\".\"uploader_id\""},
 	CreatedAt:     whereHelpertime_Time{field: "\"images\".\"created_at\""},
 	UpdatedAt:     whereHelpertime_Time{field: "\"images\".\"updated_at\""},
@@ -100,19 +107,29 @@ var ImageWhere = struct {
 
 // ImageRels is where relationship names are stored.
 var ImageRels = struct {
+	Property string
 	Uploader string
 }{
+	Property: "Property",
 	Uploader: "Uploader",
 }
 
 // imageR is where relationships are stored.
 type imageR struct {
-	Uploader *User `boiler:"Uploader" boil:"Uploader" json:"Uploader" toml:"Uploader" yaml:"Uploader"`
+	Property *Property `boiler:"Property" boil:"Property" json:"Property" toml:"Property" yaml:"Property"`
+	Uploader *User     `boiler:"Uploader" boil:"Uploader" json:"Uploader" toml:"Uploader" yaml:"Uploader"`
 }
 
 // NewStruct creates a new relationship struct
 func (*imageR) NewStruct() *imageR {
 	return &imageR{}
+}
+
+func (r *imageR) GetProperty() *Property {
+	if r == nil {
+		return nil
+	}
+	return r.Property
 }
 
 func (r *imageR) GetUploader() *User {
@@ -126,8 +143,8 @@ func (r *imageR) GetUploader() *User {
 type imageL struct{}
 
 var (
-	imageAllColumns            = []string{"id", "path", "file_size_bytes", "extension", "uploader_id", "created_at", "updated_at", "deleted_at"}
-	imageColumnsWithoutDefault = []string{"path", "file_size_bytes", "extension", "uploader_id"}
+	imageAllColumns            = []string{"id", "path", "file_size_bytes", "extension", "property_id", "uploader_id", "created_at", "updated_at", "deleted_at"}
+	imageColumnsWithoutDefault = []string{"path", "file_size_bytes", "extension", "property_id", "uploader_id"}
 	imageColumnsWithDefault    = []string{"id", "created_at", "updated_at", "deleted_at"}
 	imagePrimaryKeyColumns     = []string{"id"}
 	imageGeneratedColumns      = []string{}
@@ -375,6 +392,17 @@ func (q imageQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
+// Property pointed to by the foreign key.
+func (o *Image) Property(mods ...qm.QueryMod) propertyQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"id\" = ?", o.PropertyID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Properties(queryMods...)
+}
+
 // Uploader pointed to by the foreign key.
 func (o *Image) Uploader(mods ...qm.QueryMod) userQuery {
 	queryMods := []qm.QueryMod{
@@ -384,6 +412,127 @@ func (o *Image) Uploader(mods ...qm.QueryMod) userQuery {
 	queryMods = append(queryMods, mods...)
 
 	return Users(queryMods...)
+}
+
+// LoadProperty allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (imageL) LoadProperty(e boil.Executor, singular bool, maybeImage interface{}, mods queries.Applicator) error {
+	var slice []*Image
+	var object *Image
+
+	if singular {
+		var ok bool
+		object, ok = maybeImage.(*Image)
+		if !ok {
+			object = new(Image)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeImage)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeImage))
+			}
+		}
+	} else {
+		s, ok := maybeImage.(*[]*Image)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeImage)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeImage))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &imageR{}
+		}
+		args = append(args, object.PropertyID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &imageR{}
+			}
+
+			for _, a := range args {
+				if a == obj.PropertyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.PropertyID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`properties`),
+		qm.WhereIn(`properties.id in ?`, args...),
+		qmhelper.WhereIsNull(`properties.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Property")
+	}
+
+	var resultSlice []*Property
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Property")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for properties")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for properties")
+	}
+
+	if len(propertyAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Property = foreign
+		if foreign.R == nil {
+			foreign.R = &propertyR{}
+		}
+		foreign.R.Images = append(foreign.R.Images, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.PropertyID == foreign.ID {
+				local.R.Property = foreign
+				if foreign.R == nil {
+					foreign.R = &propertyR{}
+				}
+				foreign.R.Images = append(foreign.R.Images, local)
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadUploader allows an eager lookup of values, cached into the
@@ -502,6 +651,52 @@ func (imageL) LoadUploader(e boil.Executor, singular bool, maybeImage interface{
 				break
 			}
 		}
+	}
+
+	return nil
+}
+
+// SetProperty of the image to the related item.
+// Sets o.R.Property to related.
+// Adds o to related.R.Images.
+func (o *Image) SetProperty(exec boil.Executor, insert bool, related *Property) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"images\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"property_id"}),
+		strmangle.WhereClause("\"", "\"", 2, imagePrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.PropertyID = related.ID
+	if o.R == nil {
+		o.R = &imageR{
+			Property: related,
+		}
+	} else {
+		o.R.Property = related
+	}
+
+	if related.R == nil {
+		related.R = &propertyR{
+			Images: ImageSlice{o},
+		}
+	} else {
+		related.R.Images = append(related.R.Images, o)
 	}
 
 	return nil

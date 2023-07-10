@@ -12,6 +12,7 @@ import (
 	"renthome/email"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/ninja-software/terror/v2"
@@ -148,7 +149,9 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 		return terror.Panic(err)
 	}
 
-	apiController := api.NewAPIController(mailer, apiAddr, auther, conn)
+	validator := &api.Validator{Validate: validator.New()}
+
+	apiController := api.NewAPIController(mailer, apiAddr, auther, conn, validator)
 
 	router := api.NewRouter(apiController, adminHostURL, publicHostURL)
 

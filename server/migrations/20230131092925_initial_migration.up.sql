@@ -122,20 +122,7 @@ CREATE TRIGGER updateUserKeywords
     AFTER INSERT OR UPDATE
     ON users
     FOR EACH ROW
-    EXECUTE PROCEDURE updateUserKeywords();
-
--- images
-CREATE TABLE images
-(
-    id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    path            TEXT             NOT NULL,
-    file_size_bytes BIGINT           NOT NULL,
-    extension       TEXT             NOT NULL,
-    uploader_id     UUID             NOT NULL REFERENCES users (id),
-    created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    deleted_at      TIMESTAMPTZ
-); 
+    EXECUTE PROCEDURE updateUserKeywords(); 
 
 -- password hashes
 CREATE TABLE password_hashes
@@ -229,6 +216,20 @@ CREATE TABLE property_blobs
     property_id UUID NOT NULL REFERENCES properties (id),
     blob_id     UUID NOT NULL REFERENCES blobs (id),
     PRIMARY KEY (property_id, blob_id)
+);
+
+-- images
+CREATE TABLE images
+(
+    id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
+    path            TEXT             NOT NULL,
+    file_size_bytes BIGINT           NOT NULL,
+    extension       TEXT             NOT NULL,
+    property_id     UUID             NOT NULL REFERENCES properties (id),
+    uploader_id     UUID             NOT NULL REFERENCES users (id),
+    created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    deleted_at      TIMESTAMPTZ
 );
 
 /*************

@@ -15,12 +15,20 @@ require (
 	github.com/rs/zerolog v1.29.0
 	github.com/urfave/cli/v2 v2.24.3
 	github.com/volatiletech/null/v8 v8.1.2
-	github.com/volatiletech/sqlboiler/v4 v4.14.1
+	github.com/volatiletech/sqlboiler/v4 v4.14.2
 	github.com/volatiletech/strmangle v0.0.4
-	golang.org/x/crypto v0.5.0
+	golang.org/x/crypto v0.7.0
 )
 
 require github.com/aymerick/raymond v2.0.2+incompatible
+
+require (
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
+	golang.org/x/net v0.8.0 // indirect
+)
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -30,6 +38,7 @@ require (
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -62,8 +71,8 @@ require (
 	github.com/volatiletech/randomize v0.0.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

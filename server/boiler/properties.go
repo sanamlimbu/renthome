@@ -207,18 +207,21 @@ var PropertyWhere = struct {
 var PropertyRels = struct {
 	Agency  string
 	Manager string
+	Images  string
 	Blobs   string
 }{
 	Agency:  "Agency",
 	Manager: "Manager",
+	Images:  "Images",
 	Blobs:   "Blobs",
 }
 
 // propertyR is where relationships are stored.
 type propertyR struct {
-	Agency  *Agency   `boiler:"Agency" boil:"Agency" json:"Agency" toml:"Agency" yaml:"Agency"`
-	Manager *Manager  `boiler:"Manager" boil:"Manager" json:"Manager" toml:"Manager" yaml:"Manager"`
-	Blobs   BlobSlice `boiler:"Blobs" boil:"Blobs" json:"Blobs" toml:"Blobs" yaml:"Blobs"`
+	Agency  *Agency    `boiler:"Agency" boil:"Agency" json:"Agency" toml:"Agency" yaml:"Agency"`
+	Manager *Manager   `boiler:"Manager" boil:"Manager" json:"Manager" toml:"Manager" yaml:"Manager"`
+	Images  ImageSlice `boiler:"Images" boil:"Images" json:"Images" toml:"Images" yaml:"Images"`
+	Blobs   BlobSlice  `boiler:"Blobs" boil:"Blobs" json:"Blobs" toml:"Blobs" yaml:"Blobs"`
 }
 
 // NewStruct creates a new relationship struct
@@ -238,6 +241,13 @@ func (r *propertyR) GetManager() *Manager {
 		return nil
 	}
 	return r.Manager
+}
+
+func (r *propertyR) GetImages() ImageSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Images
 }
 
 func (r *propertyR) GetBlobs() BlobSlice {
@@ -522,6 +532,20 @@ func (o *Property) Manager(mods ...qm.QueryMod) managerQuery {
 	return Managers(queryMods...)
 }
 
+// Images retrieves all the image's Images with an executor.
+func (o *Property) Images(mods ...qm.QueryMod) imageQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"images\".\"property_id\"=?", o.ID),
+	)
+
+	return Images(queryMods...)
+}
+
 // Blobs retrieves all the blob's Blobs with an executor.
 func (o *Property) Blobs(mods ...qm.QueryMod) blobQuery {
 	var queryMods []qm.QueryMod
@@ -779,6 +803,121 @@ func (propertyL) LoadManager(e boil.Executor, singular bool, maybeProperty inter
 	return nil
 }
 
+// LoadImages allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (propertyL) LoadImages(e boil.Executor, singular bool, maybeProperty interface{}, mods queries.Applicator) error {
+	var slice []*Property
+	var object *Property
+
+	if singular {
+		var ok bool
+		object, ok = maybeProperty.(*Property)
+		if !ok {
+			object = new(Property)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeProperty))
+			}
+		}
+	} else {
+		s, ok := maybeProperty.(*[]*Property)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeProperty)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeProperty))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &propertyR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &propertyR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`images`),
+		qm.WhereIn(`images.property_id in ?`, args...),
+		qmhelper.WhereIsNull(`images.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load images")
+	}
+
+	var resultSlice []*Image
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice images")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on images")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for images")
+	}
+
+	if len(imageAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Images = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &imageR{}
+			}
+			foreign.R.Property = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.PropertyID {
+				local.R.Images = append(local.R.Images, foreign)
+				if foreign.R == nil {
+					foreign.R = &imageR{}
+				}
+				foreign.R.Property = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // LoadBlobs allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (propertyL) LoadBlobs(e boil.Executor, singular bool, maybeProperty interface{}, mods queries.Applicator) error {
@@ -1000,6 +1139,58 @@ func (o *Property) SetManager(exec boil.Executor, insert bool, related *Manager)
 		related.R.Properties = append(related.R.Properties, o)
 	}
 
+	return nil
+}
+
+// AddImages adds the given related objects to the existing relationships
+// of the property, optionally inserting them as new records.
+// Appends related to o.R.Images.
+// Sets related.R.Property appropriately.
+func (o *Property) AddImages(exec boil.Executor, insert bool, related ...*Image) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.PropertyID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"images\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"property_id"}),
+				strmangle.WhereClause("\"", "\"", 2, imagePrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.PropertyID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &propertyR{
+			Images: related,
+		}
+	} else {
+		o.R.Images = append(o.R.Images, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &imageR{
+				Property: o,
+			}
+		} else {
+			rel.R.Property = o
+		}
+	}
 	return nil
 }
 
