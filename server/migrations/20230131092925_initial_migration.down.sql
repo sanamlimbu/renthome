@@ -10,7 +10,7 @@ DROP TABLE user_notifications;
 DROP TABLE user_privacies;
 DROP TABLE notifications;
 DROP TABLE privacies;
-DROP TABLE medias
+DROP TABLE images;
 DROP TABLE users;
 DROP TABLE blobs;
 COMMIT;

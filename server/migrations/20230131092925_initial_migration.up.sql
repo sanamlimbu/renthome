@@ -124,11 +124,10 @@ CREATE TRIGGER updateUserKeywords
     FOR EACH ROW
     EXECUTE PROCEDURE updateUserKeywords();
 
--- medias
-CREATE TABLE medias
+-- images
+CREATE TABLE images
 (
     id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    type            TEXT             NOT NULL,
     path            TEXT             NOT NULL,
     file_size_bytes BIGINT           NOT NULL,
     extension       TEXT             NOT NULL,
@@ -167,20 +166,21 @@ CREATE TABLE reset_passwords
 (
     id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     slug                TEXT UNIQUE NOT NULL,
-    type                TEXT        NOT NULL CHECK (type IN ('Unit', 'Appartment', 'House', 'Villa', 'Townhouse')), 
-    category            TEXT        NOT NULL CHECK (category IN ('Rent', 'Sell')), 
+    type                TEXT        NOT NULL CHECK (type IN ('Unit', 'Apartment', 'House', 'Villa', 'Townhouse')), 
+    category            TEXT        NOT NULL CHECK (category IN ('Rent', 'Buy', 'Sold')), 
     street              TEXT        NOT NULL,
     suburb              TEXT        NOT NULL,
-    postcode            TEXT        NOT NULL,
+    postcode            INTEGER     NOT NULL,
     state               TEXT        NOT NULL CHECK (state IN ('New South Wales', 'Victoria', 'Queensland', 'South Australia', 'Western Australia', 'Tasmania', 'Northern Territory', 'Australian Capital Territory')),     
     bed_count           INTEGER     NOT NULL,
     bath_count          INTEGER     NOT NULL,
     car_count           INTEGER     NOT NULL,
-    has_aircon          BOOLEAN     NOT NULL,
-    is_furnished        BOOLEAN     NOT NULL,
-    is_pets_considered  BOOLEAN     NOT NULL,
-    available_at        TIMESTAMPTZ NOT NULL,
+    has_aircon          BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_furnished        BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_pets_considered  BOOLEAN     NOT NULL DEFAULT FALSE,
+    available_at        TIMESTAMPTZ,
     open_at             TIMESTAMPTZ,
+    price               INTEGER     NOT NULL,
     agency_id           UUID        NOT NULL REFERENCES agencies (id),
     manager_id          UUID        NOT NULL REFERENCES managers (id),
     keywords            TSVECTOR,
