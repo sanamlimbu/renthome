@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"renthome/boiler"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -109,6 +110,12 @@ func SeedFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	if err != nil {
 		return terror.Panic(err)
 	}
+
+	err = seedAgencies(ctx, conn)
+	if err != nil {
+		fmt.Println("Failed seeding agencies")
+	}
+	fmt.Println("Seeded agencies")
 
 	err = seedNotifications(ctx, conn)
 	if err != nil {
@@ -234,6 +241,49 @@ func seedUsers(ctx context.Context, conn *sql.DB) error {
 	err = member.Insert(tx, boil.Infer())
 	if err != nil {
 		return err
+	}
+
+	agencies, err := boiler.Agencies().All(tx)
+	if err != nil {
+		return err
+	}
+
+	// for each agency create one admin and one property manager
+	for _, agency := range agencies {
+
+		lowerCase := strings.ToLower(strings.ReplaceAll(agency.Name, " ", ""))
+
+		agencyAdmin := &boiler.User{
+			FirstName:   "Admin",
+			LastName:    "Admin",
+			Email:       null.StringFrom(lowerCase + "@example.com"),
+			Title:       null.StringFrom("Property Manager"),
+			Description: null.StringFrom("Manager of " + agency.Name),
+			IsVerified:  true,
+			Role:        "AGENCY",
+			AgencyID:    null.StringFrom(agency.ID),
+		}
+
+		propertyManager := &boiler.User{
+			FirstName:   "Property",
+			LastName:    "Manager",
+			Email:       null.StringFrom("pm" + lowerCase + "@example.com"),
+			Title:       null.StringFrom("Property Manager"),
+			Description: null.StringFrom("Property Manger of " + agency.Name),
+			IsVerified:  true,
+			Role:        "MANAGER",
+			AgencyID:    null.StringFrom(agency.ID),
+		}
+
+		err = agencyAdmin.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
+
+		err = propertyManager.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
 	}
 
 	memberPasswordHash := &boiler.PasswordHash{
@@ -407,6 +457,42 @@ func seedPrivacies(ctx context.Context, conn *sql.DB) error {
 
 	for _, privacy := range privacies {
 		err = privacy.Insert(tx, boil.Infer())
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func seedAgencies(ctx context.Context, conn *sql.DB) error {
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	agencies := []boiler.Agency{
+		{
+			Name:  "Ray White",
+			Color: "#f4f4f3",
+		},
+		{
+			Name:  "LJ Hooker",
+			Color: "#e3f6f1",
+		},
+		{
+			Name:  "Harcourts",
+			Color: "#bfdedd",
+		},
+	}
+
+	for _, agency := range agencies {
+		err = agency.Insert(tx, boil.Infer())
 		if err != nil {
 			return err
 		}

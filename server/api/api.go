@@ -2,6 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
+	"net/http"
+	"renthome"
 	"renthome/email"
 	"time"
 
@@ -14,32 +17,35 @@ import (
 type Validator struct {
 	Validate *validator.Validate
 }
+
 type APIController struct {
-	Addr      string
-	Auther    *Auther
-	Mailer    *email.Mailer
-	Conn      *sql.DB
-	Validator *Validator
+	Addr          string
+	Auther        *Auther
+	Mailer        *email.Mailer
+	Conn          *sql.DB
+	Validator     *Validator
+	ObjectStorage *renthome.ObjectStorage
 }
 
-func NewAPIController(mailer *email.Mailer, addr string, auther *Auther, conn *sql.DB, validator *Validator) *APIController {
+func NewAPIController(mailer *email.Mailer, addr string, auther *Auther, conn *sql.DB, validator *Validator, objectStorage *renthome.ObjectStorage) *APIController {
 	api := &APIController{
-		Addr:      addr,
-		Conn:      conn,
-		Mailer:    mailer,
-		Auther:    auther,
-		Validator: validator,
+		Addr:          addr,
+		Conn:          conn,
+		Mailer:        mailer,
+		Auther:        auther,
+		Validator:     validator,
+		ObjectStorage: objectStorage,
 	}
 
 	return api
 }
 
-func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux {
+func NewRouter(api *APIController, adminHostURL, publicHostURL, agentHostURL string) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{adminHostURL, publicHostURL},
+		AllowedOrigins:   []string{adminHostURL, publicHostURL, agentHostURL},
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
 		AllowedMethods:   []string{"HEAD", "GET", "POST", "PUT"},
@@ -68,7 +74,7 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 		})
 		r.Get("/properties", WithError(api.GetProperties))
 		r.Get("/properties/{id}", WithError(api.GetProperty))
-		r.Post("/properties", WithError(WithUser(api, api.CreateProperty)))
+		r.Post("/properties", WithError(api.CreateProperty))
 		r.Put("/properties/{id}", WithError(WithUser(api, api.UpdateProperty)))
 		r.Delete("/properties/{id}", WithError(WithUser(api, api.DeleteProperty)))
 
@@ -78,7 +84,33 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL string) *chi.Mux 
 		r.Put("/privacies/update", WithError(WithUser(api, api.UpdatePrivacyHandler)))
 
 		r.Post("/test", WithError(api.Test))
+
+		r.Post("/files/upload", WithError(WithUser(api, api.FileUpload)))
+		r.Get("/hello", hello)
 	})
 
 	return r
+}
+
+type ResponseData struct {
+	Message string `json:"message"`
+}
+
+func hello(w http.ResponseWriter, r *http.Request) {
+	data := ResponseData{
+		Message: "hello",
+	}
+
+	// Marshal the data into JSON format
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the Content-Type header to indicate JSON response
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON response to the http.ResponseWriter
+	w.Write(jsonData)
 }

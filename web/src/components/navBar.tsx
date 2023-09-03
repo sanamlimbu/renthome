@@ -15,7 +15,7 @@ import RentHomeLogo from "./rentHomeLogo";
 
 export default function NavBar() {
   const [openMenu, setOpenMenu] = useState(false);
-  const matches = useMediaQuery("(min-width:769px)");
+  const matches = useMediaQuery("(min-width:990px)");
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const location = useLocation();
@@ -70,6 +70,16 @@ export default function NavBar() {
             <NavBarButton onClick={() => navigate("/sold")}>Sold</NavBarButton>
             <NavBarButton onClick={() => navigate("/find-agent")}>
               Find agents
+            </NavBarButton>
+            <NavBarButton onClick={() => navigate("/new-homes")}>
+              New homes
+            </NavBarButton>
+            <NavBarButton onClick={() => navigate("/home-loans")}>
+              Home loans
+            </NavBarButton>
+            <NavBarButton onClick={() => navigate("/news")}>News</NavBarButton>
+            <NavBarButton onClick={() => navigate("/commercial")}>
+              Commercial
             </NavBarButton>
           </div>
         )}

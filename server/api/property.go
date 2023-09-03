@@ -1,12 +1,15 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"renthome/boiler"
-	"time"
 
+	"github.com/h2non/filetype"
 	"github.com/ninja-software/terror/v2"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -59,39 +62,55 @@ func (api *APIController) GetProperty(w http.ResponseWriter, r *http.Request) (i
 }
 
 type CreatePropertyRequest struct {
-	Type             string `json:"type" validate:"required"`
-	Category         string `json:"category" validate:"required"`
-	Street           string `json:"street" validate:"required"`
-	Suburb           string `json:"suburb" validate:"required"`
-	Postcode         int    `json:"postcode" validate:"required,gte=0"`
-	State            string `json:"state" validate:"required"`
-	BedCount         int    `json:"bed_count" validate:"required"`
-	BathCount        int    `json:"bath_count" validate:"required"`
-	CarCount         int    `json:"car_count" validate:"required"`
-	HasAirCon        bool   `json:"has_aircon" validate:"required"`
-	IsFurnished      bool   `json:"is_furnished" validate:"required"`
-	IsPetsConsidered bool   `json:"is_pets_considered" validate:"required"`
-	AvailableAt      string `json:"available_at" validate:"required"`
-	OpenAt           string `json:"open_at" validate:"required"`
-	Price            int    `json:"price" validate:"required"`
+	Type             string    `json:"type" validate:"required"`
+	Category         string    `json:"category" validate:"required"`
+	Street           string    `json:"street" validate:"required"`
+	Suburb           string    `json:"suburb" validate:"required"`
+	Postcode         string    `json:"postcode" validate:"required"`
+	State            string    `json:"state" validate:"required"`
+	BedCount         int       `json:"bed_count" validate:"required"`
+	BathCount        int       `json:"bath_count" validate:"required"`
+	CarCount         int       `json:"car_count" validate:"required"`
+	HasAirCon        bool      `json:"has_aircon" validate:"required"`
+	IsFurnished      bool      `json:"is_furnished" validate:"required"`
+	IsPetsConsidered bool      `json:"is_pets_considered" validate:"required"`
+	AvailableAt      null.Time `json:"available_at" validate:""`
+	OpenAt           null.Time `json:"open_at" validate:""`
+	Price            int       `json:"price" validate:"required"`
 }
 
-func (api *APIController) CreateProperty(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error) {
+type CreatePropertyResponse struct {
+	Property *boiler.Property `json:"property"`
+}
+
+func (api *APIController) CreateProperty(w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &CreatePropertyRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
-	availableAt, err := time.Parse(time.RFC3339, req.AvailableAt)
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Invalid date.")
-	}
+	// check of zero value
 
-	openAt, err := time.Parse(time.RFC3339, req.AvailableAt)
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, "Invalid date.")
-	}
+	// if req.AvailableAt.Valid {
+	// 	availableAt, err = time.Parse(time.RFC3339, req.AvailableAt)
+	// 	if err != nil {
+	// 		return http.StatusBadRequest, terror.Error(err, "Invalid date.")
+	// 	}
+	// }
+
+	// openAt, err := time.Parse(time.RFC3339, req.AvailableAt.String())
+	// if err != nil {
+	// 	return http.StatusBadRequest, terror.Error(err, "Invalid date.")
+	// }
+
+	// propertyID, err := uuid.NewV4()
+	// if err != nil {
+	// 	return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	// }
+
+	fmt.Println("available", req.AvailableAt)
+	fmt.Println("Open", req.OpenAt)
 
 	property := &boiler.Property{
 		Type:             req.Type,
@@ -106,17 +125,49 @@ func (api *APIController) CreateProperty(w http.ResponseWriter, r *http.Request,
 		HasAircon:        req.HasAirCon,
 		IsFurnished:      req.IsFurnished,
 		IsPetsConsidered: req.IsPetsConsidered,
-		AvailableAt:      null.TimeFrom(availableAt),
-		OpenAt:           null.TimeFrom(openAt),
+		AvailableAt:      req.AvailableAt,
+		OpenAt:           req.OpenAt,
 		Price:            req.Price,
+		ManagerID:        "90b71c18-c836-421b-9e17-0bb119019baa",
+		AgencyID:         "5d621a17-6ea0-430a-98f0-ea419097c751",
 	}
 
-	err = property.Insert(api.Conn, boil.Infer())
+	// begin transaction
+	ctx := context.Background()
+	tx, err := api.Conn.BeginTx(ctx, nil)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrBeginTransaction)
+	}
+
+	err = property.Insert(tx, boil.Infer())
 	if err != nil {
 		return http.StatusInternalServerError, terror.Error(err, "Unable to create property.")
 	}
 
-	return 200, nil
+	// for _, image := range images {
+	// 	image.PropertyID = propertyID.String()
+	// 	image.UploaderID = propertyID.String()
+
+	// 	image.Insert(tx, boil.Infer())
+	// 	if err != nil {
+	// 		return http.StatusInternalServerError, terror.Error(err, "Unable to create property.")
+	// 	}
+	// }
+
+	err = tx.Commit()
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrCommitTransaction)
+	}
+
+	createPropertyResponse := &CreatePropertyResponse{
+		Property: property,
+	}
+
+	if err = json.NewEncoder(w).Encode(createPropertyResponse); err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	return http.StatusCreated, nil
 }
 
 func (api *APIController) UpdateProperty(w http.ResponseWriter, r *http.Request, user *boiler.User) (int, error) {
@@ -162,4 +213,56 @@ func (api *APIController) Test(w http.ResponseWriter, r *http.Request) (int, err
 
 	return 200, nil
 
+}
+
+// parseImages will read a multipart form request and returns slice of Image
+func parseImages(r *http.Request) ([]*boiler.Image, error) {
+
+	var images []*boiler.Image
+
+	multipartReader, err := r.MultipartReader()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		part, err := multipartReader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := ioutil.ReadAll(part)
+		if err != nil {
+			return nil, err
+		}
+
+		// handle file
+		if part.FormName() == "file" {
+			// get mime type
+			kind, err := filetype.Match(data)
+			if err != nil {
+				return nil, err
+			}
+
+			mimeType := kind.MIME.Value
+			extension := kind.Extension
+
+			if kind == filetype.Unknown {
+				return nil, err
+			}
+
+			image := &boiler.Image{
+				FileSizeBytes: int64(len(data)),
+				Extension:     extension,
+				MimeType:      mimeType,
+			}
+
+			images = append(images, image)
+
+		}
+	}
+	return images, nil
 }

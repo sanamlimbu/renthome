@@ -19,3 +19,10 @@ export enum Perm {
   PropertyArchive = "PropertyArchive",
   PropertyUnarchive = "PropertyUnarchive",
 }
+
+export enum ExploreType {
+  Buying = "Buying",
+  Renting = "Renting",
+  Selling = "Selling",
+  Researching = "Researching",
+}

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"renthome"
 	"renthome/api"
 	"renthome/email"
 	"time"
@@ -75,9 +76,17 @@ func main() {
 
 					&cli.StringFlag{Name: "admin_host_url", Value: "http://localhost:3001", EnvVars: []string{"RENTHOME_ADMIN_FRONTEND_HOST_URL"}, Usage: "The Admin Site URL used for links in the mailer and allowed cors urls"},
 					&cli.StringFlag{Name: "public_host_url", Value: "http://localhost:3000", EnvVars: []string{"RENTHOME_PUBLIC_FRONTEND_HOST_URL"}, Usage: "The Public Site URL used for links in the mailer and allowed cors urls"},
+					&cli.StringFlag{Name: "agent_host_url", Value: "http://localhost:5173", EnvVars: []string{"RENTHOME_AGENT_FRONTEND_HOST_URL"}, Usage: "The Agent Site URL used for links in the mailer and allowed cors urls"},
 
 					&cli.IntFlag{Name: "tokenexpirydays", Value: 30, EnvVars: []string{"RENTHOME_USERAUTH_TOKENEXPIRYDAYS"}, Usage: "How many days before the token expires"},
 					&cli.IntFlag{Name: "blacklistrefreshhours", Value: 1, EnvVars: []string{"RENTHOME_USERAUTH_BLACKLISTREFRESHHOURS"}, Usage: "How often should the issued_tokens list be cleared of expired tokens in hours"},
+
+					&cli.StringFlag{Name: "storage_endpoint", Value: "127.0.0.1:9000", EnvVars: []string{"RENTHOME_STORAGE_ENDPOINT"}, Usage: "endpoint url for object storage"},
+					&cli.BoolFlag{Name: "storage_endpoint_secure", Value: false, EnvVars: []string{"RENTHOME_STORAGE_ENDPOINT_SECURE"}, Usage: "endpoint url connect with TLS"},
+					&cli.StringFlag{Name: "storage_key", Value: "minioadmin", EnvVars: []string{"RENTHOME_STORAGE_KEY"}, Usage: "access key for object storage"},
+					&cli.StringFlag{Name: "storage_secret", Value: "minioadmin", EnvVars: []string{"RENTHOME_STORAGE_SECRET"}, Usage: "secret key for object storage"},
+					&cli.StringFlag{Name: "storage_name", Value: "renthome", Usage: "object storage name for identity", EnvVars: []string{"RENTHOME_STORAGE_NAME"}},
+					&cli.StringFlag{Name: "storage_bucket_location", Value: "ap-southeast-2", Usage: "bucket storage server location", EnvVars: []string{"RENTHOME_STORAGE_BUCKET_LOCATION"}},
 				},
 
 				Usage: "run server",
@@ -89,17 +98,11 @@ func main() {
 					// Listen for os.interrupt
 					g.Add(run.SignalHandler(ctx, os.Interrupt))
 					// start the server
-					g.Add(func() error { return ServeFunc(c, ctx) }, func(err error) {
-						if err != nil {
-							fmt.Println(terror.Echo(err))
-						}
-						cancel()
-					})
+					g.Add(func() error { return ServeFunc(c, ctx) }, func(err error) { cancel() })
 
 					err := g.Run()
 					if errors.Is(err, run.SignalError{Signal: os.Interrupt}) {
 						err = terror.Warn(err)
-						return err
 					}
 					return nil
 				},
@@ -130,30 +133,51 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 
 	adminHostURL := ctxCLI.String("admin_host_url")
 	publicHostURL := ctxCLI.String("public_host_url")
+	agentHostURL := ctxCLI.String("agent_host_url")
 
 	mailHost := ctxCLI.String("mail_host")
 	mailPort := ctxCLI.String("mail_port")
 	mailUsername := ctxCLI.String("mail_username")
 	mailPassword := ctxCLI.String("mail_password")
 
-	mailer, err := email.NewMailer(mailUsername, mailPassword, mailHost, mailPort)
+	storageEndpoint := ctxCLI.String("storage_endpoint")
+	storageEndpointSecure := ctxCLI.Bool("storage_endpoint_secure")
+	storageKey := ctxCLI.String("storage_key")
+	storageSecret := ctxCLI.String("storage_secret")
+	storageName := ctxCLI.String("storage_name")
+	storageLocation := ctxCLI.String("storage_bucket_location")
+
+	// Object storage
+	var objectStorage *renthome.ObjectStorage
+	objectStorage, err := renthome.NewObjectStorage(
+		storageEndpoint, storageEndpointSecure, storageKey, storageSecret, storageName, storageLocation,
+	)
 	if err != nil {
-		panic(err)
+		return terror.Error(err, "failed to connect to object storage")
 	}
 
+	// Mailer
+	mailer, err := email.NewMailer(mailUsername, mailPassword, mailHost, mailPort)
+	if err != nil {
+		return terror.Panic(err, "Mailer init failed")
+	}
+
+	// Auther
 	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID)
 
-	// db connection
+	// Database connection
 	conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version, databaseMaxIdleConns, databaseMaxOpenConns)
 	if err != nil {
-		return terror.Panic(err)
+		return terror.Panic(err, "failed to connect to database")
 	}
 
 	validator := &api.Validator{Validate: validator.New()}
 
-	apiController := api.NewAPIController(mailer, apiAddr, auther, conn, validator)
+	// API controller
+	apiController := api.NewAPIController(mailer, apiAddr, auther, conn, validator, objectStorage)
 
-	router := api.NewRouter(apiController, adminHostURL, publicHostURL)
+	// Router
+	router := api.NewRouter(apiController, adminHostURL, publicHostURL, agentHostURL)
 
 	server := &http.Server{
 		Addr:    apiController.Addr,

@@ -11,9 +11,4 @@ export const socialList: SocialType[] = [
     bgColor: "white",
     color: "black",
   },
-  {
-    name: "Apple",
-    bgColor: "black",
-    color: "white",
-  },
 ];

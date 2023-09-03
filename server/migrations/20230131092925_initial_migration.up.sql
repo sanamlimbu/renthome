@@ -10,7 +10,9 @@ CREATE TABLE blobs
     extension       TEXT             NOT NULL,
     file            BYTEA            NOT NULL,
     views           INTEGER          NOT NULL DEFAULT 0,
-    hash            TEXT,
+    hash            TEXT             NOT NULL,
+    public          BOOLEAN          NOT NULL DEFAULT FALSE,
+
     created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     deleted_at      TIMESTAMPTZ
@@ -31,20 +33,6 @@ CREATE TABLE blobs
     updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     deleted_at  TIMESTAMPTZ
  );
-
- /*************
- *  Managers  *
- *************/
-
- CREATE TABLE managers
- (
-    id          UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(), 
-    agency_id   UUID        NOT NULL REFERENCES  agencies (id),     
-    created_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    deleted_at  TIMESTAMPTZ
- );
-
 
 /******************
  *  Users  *
@@ -67,7 +55,6 @@ CREATE TABLE blobs
     avatar_id               UUID REFERENCES blobs (id),
     agency_id               UUID REFERENCES agencies (id),
     is_agency               BOOLEAN         NOT NULL DEFAULT FALSE,
-    manager_id              UUID REFERENCES managers (id),
     keywords                TSVECTOR,
     created_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
@@ -157,8 +144,8 @@ CREATE TABLE reset_passwords
     category            TEXT        NOT NULL CHECK (category IN ('Rent', 'Buy', 'Sold')), 
     street              TEXT        NOT NULL,
     suburb              TEXT        NOT NULL,
-    postcode            INTEGER     NOT NULL,
-    state               TEXT        NOT NULL CHECK (state IN ('New South Wales', 'Victoria', 'Queensland', 'South Australia', 'Western Australia', 'Tasmania', 'Northern Territory', 'Australian Capital Territory')),     
+    postcode            TEXT        NOT NULL,
+    state               TEXT        NOT NULL CHECK (state IN ('NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT')),     
     bed_count           INTEGER     NOT NULL,
     bath_count          INTEGER     NOT NULL,
     car_count           INTEGER     NOT NULL,
@@ -169,7 +156,7 @@ CREATE TABLE reset_passwords
     open_at             TIMESTAMPTZ,
     price               INTEGER     NOT NULL,
     agency_id           UUID        NOT NULL REFERENCES agencies (id),
-    manager_id          UUID        NOT NULL REFERENCES managers (id),
+    manager_id          UUID        NOT NULL REFERENCES users (id),
     keywords            TSVECTOR,
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
@@ -224,6 +211,7 @@ CREATE TABLE images
     id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
     path            TEXT             NOT NULL,
     file_size_bytes BIGINT           NOT NULL,
+    mime_type       TEXT             NOT NULL,           
     extension       TEXT             NOT NULL,
     property_id     UUID             NOT NULL REFERENCES properties (id),
     uploader_id     UUID             NOT NULL REFERENCES users (id),

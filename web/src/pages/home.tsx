@@ -11,7 +11,6 @@ import {
   FormGroup,
   IconButton,
   InputAdornment,
-  Link,
   MenuItem,
   Select,
   TextField,
@@ -19,7 +18,9 @@ import {
 } from "@mui/material";
 import { useContext, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import HomeLoan from "../assets/homeloan.webp";
+import Explore from "../components/explore";
+import MortgageBrokers from "../components/mortgageBrokers";
+import News from "../components/news";
 import { UserContext } from "../context/user";
 
 interface IFormInput {
@@ -75,7 +76,7 @@ export default function HomePage() {
   const rentCarValues = [1, 2, 3, 4, 5];
 
   return (
-    <>
+    <Box>
       {/**
        * Search box
        */}
@@ -88,7 +89,7 @@ export default function HomePage() {
           margin: "20px",
         }}
       >
-        <Card sx={{ width: "40rem", padding: "10px" }}>
+        <Card sx={{ width: "40rem", padding: "10px", margin: "0px" }}>
           <div
             style={{
               display: "flex",
@@ -181,6 +182,11 @@ export default function HomePage() {
                   </InputAdornment>
                 ),
               }}
+              placeholder={
+                searchType === "Address"
+                  ? "Search by address"
+                  : "Search suburb, postcode or state"
+              }
               {...register("suburb")}
             />
             {searchType !== "Address" && searchType !== "Agents" && (
@@ -205,7 +211,6 @@ export default function HomePage() {
           </div>
         </Card>
       </Box>
-      <div></div>
 
       {/**
        * Filter dialog box
@@ -248,6 +253,7 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: filterType === "Buy" ? "2px solid blue" : "",
+                textDecoration: filterType === "Buy" ? "none !important" : "",
               }}
               onClick={() => setFilterType("Buy")}
             >
@@ -261,6 +267,7 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: filterType === "Rent" ? "2px solid blue" : "",
+                textDecoration: filterType === "Rent" ? "none !important" : "",
               }}
               onClick={() => setFilterType("Rent")}
             >
@@ -274,6 +281,7 @@ export default function HomePage() {
                   textDecoration: "underline",
                 },
                 borderBottom: filterType === "Sold" ? "2px solid blue" : "",
+                textDecoration: filterType === "Sold" ? "none !important" : "",
               }}
               onClick={() => setFilterType("Sold")}
             >
@@ -519,78 +527,15 @@ export default function HomePage() {
         <Property />
         <Property />
       </Box> */}
-      <Box>
-        <Typography variant="h2">Explore all things property</Typography>
-        <div>
-          <Button
-            variant="outlined"
-            sx={{
-              borderRadius: "22px",
-              fontWeight: "bold",
-              marginRight: "1em",
-            }}
-          >
-            Buying
-          </Button>
-          <Button
-            variant="outlined"
-            sx={{
-              borderRadius: "22px",
-              fontWeight: "bold",
-              marginRight: "1em",
-            }}
-          >
-            Renting
-          </Button>
-          <Button
-            variant="outlined"
-            sx={{
-              borderRadius: "22px",
-              fontWeight: "bold",
-              marginRight: "1em",
-            }}
-          >
-            Selling
-          </Button>
-          <Button
-            variant="outlined"
-            sx={{
-              borderRadius: "22px",
-              fontWeight: "bold",
-              marginRight: "1em",
-            }}
-          >
-            Researching
-          </Button>
-          <Card variant="outlined" sx={{ maxWidth: "24em" }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                margin: "0.8em",
-              }}
-            >
-              <img src={HomeLoan} height={120} />
-            </Box>
-            <Box sx={{ margin: "0 1em 1em 1em" }}>
-              <Typography variant="h3">
-                Get estimated property prices with a realEstimate™
-              </Typography>
-              <Typography
-                sx={{
-                  color: "dimgray",
-                  marginTop: "0.8em",
-                  marginBottom: "0.8em",
-                }}
-              >
-                Show how much your property's worth whether you own it or want
-                to buy it.
-              </Typography>
-              <Link sx={{ fontWeight: "600" }}>Check property values</Link>
-            </Box>
-          </Card>
-        </div>
-      </Box>
-    </>
+      <div style={{ marginBottom: "3em" }}>
+        <Explore />
+      </div>
+      <div style={{ marginBottom: "3em" }}>
+        <News />
+      </div>
+      <div style={{ marginBottom: "3em" }}>
+        <MortgageBrokers />
+      </div>
+    </Box>
   );
 }
