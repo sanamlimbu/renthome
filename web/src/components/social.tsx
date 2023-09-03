@@ -1,5 +1,6 @@
-import { Apple, Facebook, Google } from "@mui/icons-material";
 import { styled, Typography } from "@mui/material";
+import { ReactComponent as Facebook } from "../assets/facebook.svg";
+import { ReactComponent as Google } from "../assets/google.svg";
 import { getSocialURL } from "../helpers/auth";
 import { SocialType } from "../types/types";
 
@@ -24,9 +25,8 @@ export default function Social(props: { type: SocialType }) {
 
   return (
     <StyledAnchor href={url}>
-      {type.name === "Google" && <Google />}
-      {type.name === "Facebook" && <Facebook />}
-      {type.name === "Apple" && <Apple />}
+      {type.name === "Google" && <Google height={"24px"} />}
+      {type.name === "Facebook" && <Facebook height={"24px"} />}
       <Typography
         sx={{ flexGrow: "1", textAlign: "center", fontWeight: "600" }}
       >

@@ -78,6 +78,10 @@ web-install:
 web-watch:
 	cd web/ && npm run start
 
+.PHONY: agent-watch
+agent-watch:
+	cd web-agent/ && npm run dev
+
 .PHONY: generate
 generate:
 	$(BIN)/sqlboiler $(BIN)/sqlboiler-psql --wipe --tag boiler --config $(SERVER)/sqlboiler.toml --output $(SERVER)/boiler

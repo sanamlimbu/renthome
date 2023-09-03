@@ -8,16 +8,16 @@ export interface Property {
   suburb: string;
   postcode: string;
   state: string;
-  bedCount: number;
-  bathCount: number;
-  carCount: number;
-  hasAircon: boolean;
-  isFurnished: boolean;
-  isPetsConsidered: boolean;
-  availableAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
+  bed_count: number;
+  bath_count: number;
+  car_count: number;
+  has_aircon: boolean;
+  is_furnished: boolean;
+  is_pets_considered: boolean;
+  available_at: Date;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
 }
 
 export interface Agent {
@@ -30,9 +30,9 @@ export interface Agent {
   state: string;
   phone: string;
   email: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
 }
 
 export interface Manager {
@@ -40,9 +40,9 @@ export interface Manager {
   name: string;
   mobile: string;
   email: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
 }
 
 export interface User {

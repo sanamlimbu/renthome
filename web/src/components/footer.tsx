@@ -11,7 +11,14 @@ import { blue } from "@mui/material/colors";
 
 export default function Footer() {
   return (
-    <div style={{ paddingLeft: "20vw", paddingRight: "20vw" }}>
+    <div
+      style={{
+        paddingLeft: "20vw",
+        paddingRight: "20vw",
+        marginBottom: "2em",
+        marginTop: "3em",
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -37,7 +44,7 @@ export default function Footer() {
             <YouTube />
           </SocialIcon>
         </div>
-        <Typography sx={{ display: "flex", flexWrap: "wrap" }}>
+        <Typography sx={{ display: "flex", gap: "1em" }}>
           <LinkSpan>Advertise with us</LinkSpan>
           <LinkSpan>Contact us</LinkSpan>
           <LinkSpan>Agent admin</LinkSpan>
@@ -49,9 +56,14 @@ export default function Footer() {
         </Typography>
       </div>
       <Typography
-        sx={{ fontSize: "14px", opacity: "0.5", textAlign: "center" }}
+        sx={{
+          fontSize: "14px",
+          opacity: "0.5",
+          textAlign: "center",
+          marginTop: "1em",
+        }}
       >
-        Copyright © {new Date().getFullYear()} renthome.com, all rights
+        Copyright © {new Date().getFullYear()} renthome.com.au, all rights
         reserved.
       </Typography>
     </div>
@@ -67,9 +79,6 @@ const LinkSpan = styled("span")({
     opacity: "1",
   },
   cursor: "pointer",
-  flexBasis: "calc(50% - 10px)",
-  maxWidth: "calc(50% - 10px)",
-  margin: "5px",
 });
 
 const SocialIcon = styled(Icon)<IconProps>(({ theme }) => ({
@@ -78,4 +87,5 @@ const SocialIcon = styled(Icon)<IconProps>(({ theme }) => ({
     opacity: "1",
   },
   cursor: "pointer",
+  size: "small",
 }));

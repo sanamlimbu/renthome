@@ -10,7 +10,9 @@ CREATE TABLE blobs
     extension       TEXT             NOT NULL,
     file            BYTEA            NOT NULL,
     views           INTEGER          NOT NULL DEFAULT 0,
-    hash            TEXT,
+    hash            TEXT             NOT NULL,
+    public          BOOLEAN          NOT NULL DEFAULT FALSE,
+
     created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     deleted_at      TIMESTAMPTZ
@@ -31,20 +33,6 @@ CREATE TABLE blobs
     updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     deleted_at  TIMESTAMPTZ
  );
-
- /*************
- *  Managers  *
- *************/
-
- CREATE TABLE managers
- (
-    id          UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(), 
-    agency_id   UUID        NOT NULL REFERENCES  agencies (id),     
-    created_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
-    deleted_at  TIMESTAMPTZ
- );
-
 
 /******************
  *  Users  *
@@ -67,7 +55,6 @@ CREATE TABLE blobs
     avatar_id               UUID REFERENCES blobs (id),
     agency_id               UUID REFERENCES agencies (id),
     is_agency               BOOLEAN         NOT NULL DEFAULT FALSE,
-    manager_id              UUID REFERENCES managers (id),
     keywords                TSVECTOR,
     created_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
@@ -122,7 +109,7 @@ CREATE TRIGGER updateUserKeywords
     AFTER INSERT OR UPDATE
     ON users
     FOR EACH ROW
-    EXECUTE PROCEDURE updateUserKeywords();
+    EXECUTE PROCEDURE updateUserKeywords(); 
 
 -- password hashes
 CREATE TABLE password_hashes
@@ -153,22 +140,23 @@ CREATE TABLE reset_passwords
 (
     id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     slug                TEXT UNIQUE NOT NULL,
-    type                TEXT        NOT NULL CHECK (type IN ('Unit', 'Appartment', 'House', 'Villa', 'Townhouse')), 
-    category            TEXT        NOT NULL CHECK (category IN ('Rent', 'Sell')), 
+    type                TEXT        NOT NULL CHECK (type IN ('Unit', 'Apartment', 'House', 'Villa', 'Townhouse')), 
+    category            TEXT        NOT NULL CHECK (category IN ('Rent', 'Buy', 'Sold')), 
     street              TEXT        NOT NULL,
     suburb              TEXT        NOT NULL,
     postcode            TEXT        NOT NULL,
-    state               TEXT        NOT NULL CHECK (state IN ('New South Wales', 'Victoria', 'Queensland', 'South Australia', 'Western Australia', 'Tasmania', 'Northern Territory', 'Australian Capital Territory')),     
+    state               TEXT        NOT NULL CHECK (state IN ('NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT')),     
     bed_count           INTEGER     NOT NULL,
     bath_count          INTEGER     NOT NULL,
     car_count           INTEGER     NOT NULL,
-    has_aircon          BOOLEAN     NOT NULL,
-    is_furnished        BOOLEAN     NOT NULL,
-    is_pets_considered  BOOLEAN     NOT NULL,
-    available_at        TIMESTAMPTZ NOT NULL,
+    has_aircon          BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_furnished        BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_pets_considered  BOOLEAN     NOT NULL DEFAULT FALSE,
+    available_at        TIMESTAMPTZ,
     open_at             TIMESTAMPTZ,
+    price               INTEGER     NOT NULL,
     agency_id           UUID        NOT NULL REFERENCES agencies (id),
-    manager_id          UUID        NOT NULL REFERENCES managers (id),
+    manager_id          UUID        NOT NULL REFERENCES users (id),
     keywords            TSVECTOR,
     created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
@@ -215,6 +203,21 @@ CREATE TABLE property_blobs
     property_id UUID NOT NULL REFERENCES properties (id),
     blob_id     UUID NOT NULL REFERENCES blobs (id),
     PRIMARY KEY (property_id, blob_id)
+);
+
+-- images
+CREATE TABLE images
+(
+    id              UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
+    path            TEXT             NOT NULL,
+    file_size_bytes BIGINT           NOT NULL,
+    mime_type       TEXT             NOT NULL,           
+    extension       TEXT             NOT NULL,
+    property_id     UUID             NOT NULL REFERENCES properties (id),
+    uploader_id     UUID             NOT NULL REFERENCES users (id),
+    created_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    deleted_at      TIMESTAMPTZ
 );
 
 /*************
