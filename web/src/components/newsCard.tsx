@@ -8,7 +8,7 @@ export interface NewsCardProps {
 export default function NewsCard({ title, readTime, imgSrc }: NewsCardProps) {
   return (
     <Box sx={{ cursor: "pointer" }}>
-      <img src={imgSrc} height="160px" />
+      <img src={imgSrc} height="160px" alt={title} />
       <Typography
         sx={{
           maxWidth: "240px",
