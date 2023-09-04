@@ -35,6 +35,8 @@ jobs:
           file: ./web/Dockerfile
           push: true
           tags: ${{ env.IMAGE_URL }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.GH_TOKEN }}
 
       - name: Deploy Image to CapRrover
         uses: caprover/deploy-from-github@v1.1.2
