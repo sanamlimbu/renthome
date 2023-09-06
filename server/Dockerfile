@@ -3,10 +3,6 @@
 #---------------------------------------
 FROM golang:1.21-alpine as builder
 
-# Environment
-ARG GOPROXY_DEFAULT
-ENV GOPROXY=$GOPROXY_DEFAULT
-
 # Set working directory
 WORKDIR /app/server
 
@@ -29,14 +25,15 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w" -a -o /app/main
 #---------------------------------------
 # Build a small image
 #---------------------------------------
-FROM alpine:latest
+FROM scratch
 # Copy go bin
-COPY --from=builder /app/bin /app/bin
-COPY --from=builder /app/main /app/main
-COPY --from=builder /app/server/migrations /app/migrations
-COPY --from=builder /app/server/email/templates /app/email/templates
+WORKDIR /app
 
-RUN chmod +x /app/main
-EXPOSE 8000
-CMD ["/app/main", "serve"]
+COPY --from=builder /app/bin ./bin
+COPY --from=builder /app/main ./main
+COPY --from=builder /app/server/migrations ./migrations
+COPY --from=builder /app/server/email/templates ./email/templates
+
+EXPOSE 80
+CMD ["./main", "serve"]
 
