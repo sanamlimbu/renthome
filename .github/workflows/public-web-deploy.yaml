@@ -24,6 +24,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug Environment Variables
+        run: |
+          echo "REACT_APP_RENTHOME_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.REACT_APP_RENTHOME_GOOGLE_OAUTH_CLIENT_ID }}"
+          echo "REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_ID: ${{ secrets.REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_ID }}"
+      
       - name: Preset Image Name
         run: echo "IMAGE_URL=$(echo ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/public-web:$(echo ${{ github.sha }} | cut -c1-7) | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
