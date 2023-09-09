@@ -48,7 +48,7 @@ db-prepare: db-drop db-migrate
 
 .PHONY: db-seed
 db-seed:
-	cd server && go run seed/main.go db
+	cd server && go run cmd/platform/main.go db --seed
 
 .PHONY: db-reset
 db-reset: db-drop db-migrate db-seed
