@@ -1,14 +1,18 @@
 BEGIN;
 DROP TRIGGER updatePropertyKeywords;
 DROP FUNCTION updatePropretyKeywords ();
+DROP TRIGGER emailToLowercase ON users;
+DROP FUNCTION emailToLowercase();
 DROP TABLE properties;
 DROP TABLE password_hashes;
+DROP TABLE reset_passwords;
 DROP TRIGGER updateUserKeywords;
 DROP FUNCTION updateUserKeywords ();
 DROP TABLE property_blobs;
 DROP TABLE user_notifications;
 DROP TABLE user_privacies;
 DROP TABLE notifications;
+DROP TABLE issue_tokens;
 DROP TABLE privacies;
 DROP TABLE images;
 DROP TABLE users;
