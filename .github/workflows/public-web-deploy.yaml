@@ -40,7 +40,7 @@ jobs:
             "REACT_APP_RENTHOME_GOOGLE_OAUTH_CLIENT_ID=${{ secrets.REACT_APP_RENTHOME_GOOGLE_OAUTH_CLIENT_ID }}"
             "REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_ID=${{ secrets.REACT_APP_RENTHOME_FACEBOOK_OAUTH_CLIENT_ID }}"
 
-      - name: Deploy Image to CapRrover
+      - name: Deploy Image to CapRover
         uses: caprover/deploy-from-github@v1.1.2
         with:
           server: "${{ secrets.CAPROVER_SERVER }}"
