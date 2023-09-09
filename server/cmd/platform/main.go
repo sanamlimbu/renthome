@@ -11,6 +11,7 @@ import (
 	"renthome"
 	"renthome/api"
 	"renthome/email"
+	"renthome/seed"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -56,13 +57,12 @@ func main() {
 					&cli.StringFlag{Name: "database_port", Value: "5438", EnvVars: []string{"RENTHOME_DATABASE_PORT"}, Usage: "The database port"},
 					&cli.StringFlag{Name: "database_name", Value: "renthome", EnvVars: []string{"RENTHOME_DATABASE_NAME"}, Usage: "The database name"},
 					&cli.StringFlag{Name: "database_application_name", Value: "API Server", EnvVars: []string{"RENTHOME_DATABASE_APPLICATION_NAME"}, Usage: "Postgres database name"},
-					&cli.IntFlag{Name: "database_min_conns", Value: 10, EnvVars: []string{"RENTHOME_DATABASE_MIN_CONNS"}, Usage: "The database minimum connections"},
-					&cli.IntFlag{Name: "database_max_conns", Value: 80, EnvVars: []string{"RENTHOME_DATABASE_MAX_CONNS"}, Usage: "The database maximum connections"},
 
 					&cli.StringFlag{Name: "log_level", Value: "InfoLevel", EnvVars: []string{"RENTHOME_LOG_LEVEL"}, Usage: "Set the log level for zerolog (Options: DebugLevel, InfoLevel, WarnLevel, ErrorLevel, FatalLevel, PanicLevel, NoLevel, Disabled, TraceLevel"},
 					&cli.StringFlag{Name: "environment", Value: "development", DefaultText: "development", EnvVars: []string{"RENTHOME_ENVIRONMENT"}, Usage: "This program environment (development, testing, training, staging, production)"},
 
-					&cli.StringFlag{Name: "api_addr", Value: ":8000", EnvVars: []string{"RENTHOME_API_ADDR"}, Usage: "host:port to run the API"},
+					&cli.StringFlag{Name: "api_host", Value: "localhost", EnvVars: []string{"RENTHOME_API_HOST"}, Usage: "Host to run the API"},
+					&cli.StringFlag{Name: "api_port", Value: "8000", EnvVars: []string{"RENTHOME_API_PORT"}, Usage: "Port to run the API"},
 					&cli.StringFlag{Name: "rootpath", Value: "../web/dist", EnvVars: []string{"RENTHOME_ROOTPATH"}, Usage: "folder path of index.html"},
 					&cli.StringFlag{Name: "jwtsecret", Value: "a35eab71-f691-4dc3-98e5-980bda774fa0", EnvVars: []string{"RENTHOME_USERAUTH_JWTSECRET"}, Usage: "JWT secret"},
 					&cli.StringFlag{Name: "google_client_id", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_ID"}, Usage: "Google Client ID for OAuth functionaility."},
@@ -98,11 +98,53 @@ func main() {
 					// Listen for os.interrupt
 					g.Add(run.SignalHandler(ctx, os.Interrupt))
 					// start the server
-					g.Add(func() error { return ServeFunc(c, ctx) }, func(err error) { cancel() })
+					g.Add(func() error { return ServeFunc(c, ctx) }, func(err error) {
+						if err != nil {
+							terror.Echo(err)
+						}
+						cancel()
+					})
 
 					err := g.Run()
 					if errors.Is(err, run.SignalError{Signal: os.Interrupt}) {
 						err = terror.Warn(err)
+						terror.Echo(err)
+					}
+					return nil
+				},
+			},
+			{
+				Name: "db",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "database_user", Value: "renthome", EnvVars: []string{"RENTHOME_DATABASE_USER"}, Usage: "The database user"},
+					&cli.StringFlag{Name: "database_pass", Value: "devdev", EnvVars: []string{"RENTHOME_DATABASE_PASS"}, Usage: "The database pass"},
+					&cli.StringFlag{Name: "database_host", Value: "localhost", EnvVars: []string{"RENTHOME_DATABASE_HOST"}, Usage: "The database host"},
+					&cli.StringFlag{Name: "database_port", Value: "5438", EnvVars: []string{"RENTHOME_DATABASE_PORT"}, Usage: "The database port"},
+					&cli.StringFlag{Name: "database_name", Value: "renthome", EnvVars: []string{"RENTHOME_DATABASE_NAME"}, Usage: "The database name"},
+					&cli.StringFlag{Name: "database_application_name", Value: "API Server", EnvVars: []string{"RENTHOME_DATABASE_APPLICATION_NAME"}, Usage: "Postgres database name"},
+					&cli.StringFlag{Name: "environment", Value: "development", DefaultText: "development", EnvVars: []string{"RENTHOME_ENVIRONMENT"}, Usage: "This program environment (development, testing, training, staging, production)"},
+					&cli.BoolFlag{Name: "seed", EnvVars: []string{"RENTHOME_DB_SEED"}, Usage: "Seed the database"},
+				},
+
+				Usage: "seed database",
+				Action: func(c *cli.Context) error {
+					databaseUser := c.String("database_user")
+					databasePass := c.String("database_pass")
+					databaseHost := c.String("database_host")
+					databasePort := c.String("database_port")
+					databaseName := c.String("database_name")
+					databaseAppName := c.String("database_application_name")
+					databaseProd := c.Bool("database_prod")
+
+					// db connection
+					conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version)
+					if err != nil {
+						return terror.Error(err)
+					}
+					seeder := seed.NewSeeder(conn)
+					err = seeder.Run(databaseProd)
+					if err != nil {
+						terror.Echo(err)
 					}
 					return nil
 				},
@@ -114,7 +156,8 @@ func main() {
 }
 
 func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
-	apiAddr := ctxCLI.String("api_addr")
+	apiHost := ctxCLI.String("api_host")
+	apiPort := ctxCLI.String("api_port")
 	tokenExpiryDays := ctxCLI.Int("tokenexpirydays")
 	jwtSecret := ctxCLI.String("jwtsecret")
 	cookieSecure := ctxCLI.Bool("cookie_secure")
@@ -128,8 +171,6 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	databasePort := ctxCLI.String("database_port")
 	databaseName := ctxCLI.String("database_name")
 	databaseAppName := ctxCLI.String("database_application_name")
-	databaseMaxIdleConns := int(ctxCLI.Int("database_max_idle_conns"))
-	databaseMaxOpenConns := int(ctxCLI.Int("database_max_open_conns"))
 
 	adminHostURL := ctxCLI.String("admin_host_url")
 	publicHostURL := ctxCLI.String("public_host_url")
@@ -166,15 +207,17 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	auther := api.NewAuther(tokenExpiryDays, jwtSecret, cookieSecure, googleClientID, facebookClientID)
 
 	// Database connection
-	conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version, databaseMaxIdleConns, databaseMaxOpenConns)
+	conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version)
 	if err != nil {
 		return terror.Panic(err, "failed to connect to database")
 	}
 
 	validator := &api.Validator{Validate: validator.New()}
 
+	apiAddress := fmt.Sprintf("%s:%s", apiHost, apiPort)
+
 	// API controller
-	apiController := api.NewAPIController(mailer, apiAddr, auther, conn, validator, objectStorage)
+	apiController := api.NewAPIController(mailer, apiAddress, auther, conn, validator, objectStorage)
 
 	// Router
 	router := api.NewRouter(apiController, adminHostURL, publicHostURL, agentHostURL)
@@ -195,8 +238,6 @@ func connectDB(
 	databaseName string,
 	databaseApplicationName string,
 	apiVersion string,
-	maxIdleConns int,
-	maxOpenConns int,
 ) (*sql.DB, error) {
 	params := url.Values{}
 	params.Add("sslmode", "disable")
@@ -216,16 +257,13 @@ func connectDB(
 
 	config, err := pgx.ParseConfig(connString)
 	if err != nil {
-		return nil, err
+		return nil, terror.Panic(err, "could not initialise database")
 	}
 
 	conn := stdlib.OpenDB(*config)
 	if err != nil {
-		return nil, err
+		return nil, terror.Panic(err, "could not initialise database")
 	}
-
-	conn.SetMaxIdleConns(maxIdleConns)
-	conn.SetMaxOpenConns(maxOpenConns)
 
 	return conn, nil
 }
