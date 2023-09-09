@@ -61,8 +61,7 @@ func main() {
 					&cli.StringFlag{Name: "log_level", Value: "InfoLevel", EnvVars: []string{"RENTHOME_LOG_LEVEL"}, Usage: "Set the log level for zerolog (Options: DebugLevel, InfoLevel, WarnLevel, ErrorLevel, FatalLevel, PanicLevel, NoLevel, Disabled, TraceLevel"},
 					&cli.StringFlag{Name: "environment", Value: "development", DefaultText: "development", EnvVars: []string{"RENTHOME_ENVIRONMENT"}, Usage: "This program environment (development, testing, training, staging, production)"},
 
-					&cli.StringFlag{Name: "api_host", Value: "localhost", EnvVars: []string{"RENTHOME_API_HOST"}, Usage: "Host to run the API"},
-					&cli.StringFlag{Name: "api_port", Value: "8000", EnvVars: []string{"RENTHOME_API_PORT"}, Usage: "Port to run the API"},
+					&cli.StringFlag{Name: "api_address", Value: ":8000", EnvVars: []string{"RENTHOME_API_ADDRESS"}, Usage: "Host:Port address to run the API"},
 					&cli.StringFlag{Name: "rootpath", Value: "../web/dist", EnvVars: []string{"RENTHOME_ROOTPATH"}, Usage: "folder path of index.html"},
 					&cli.StringFlag{Name: "jwtsecret", Value: "a35eab71-f691-4dc3-98e5-980bda774fa0", EnvVars: []string{"RENTHOME_USERAUTH_JWTSECRET"}, Usage: "JWT secret"},
 					&cli.StringFlag{Name: "google_client_id", Value: "", EnvVars: []string{"RENTHOME_GOOGLE_CLIENT_ID"}, Usage: "Google Client ID for OAuth functionaility."},
@@ -156,8 +155,7 @@ func main() {
 }
 
 func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
-	apiHost := ctxCLI.String("api_host")
-	apiPort := ctxCLI.String("api_port")
+	apiAddress := ctxCLI.String("api_address")
 	tokenExpiryDays := ctxCLI.Int("tokenexpirydays")
 	jwtSecret := ctxCLI.String("jwtsecret")
 	cookieSecure := ctxCLI.Bool("cookie_secure")
@@ -213,8 +211,6 @@ func ServeFunc(ctxCLI *cli.Context, ctx context.Context) error {
 	}
 
 	validator := &api.Validator{Validate: validator.New()}
-
-	apiAddress := fmt.Sprintf("%s:%s", apiHost, apiPort)
 
 	// API controller
 	apiController := api.NewAPIController(mailer, apiAddress, auther, conn, validator, objectStorage)
