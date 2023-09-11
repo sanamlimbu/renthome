@@ -16,12 +16,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { SetStateAction, useContext, useState } from "react";
+import { SetStateAction, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Explore from "../components/explore";
 import MortgageBrokers from "../components/mortgageBrokers";
 import News from "../components/news";
-import { UserContext } from "../context/user";
 
 interface IFormInput {
   suburb: string;
@@ -40,11 +39,10 @@ interface IFormInput {
 }
 
 export default function HomePage() {
-  const { user } = useContext(UserContext);
   const [filterType, setFilterType] = useState("Rent");
   const [searchType, setSearchType] = useState("Rent");
   const [searchTerm, setSearchTerm] = useState("");
-  const [suggestedLocations, setSuggestedLocations] = useState<Location[]>([]);
+  //const [suggestedLocations, setSuggestedLocations] = useState<Location[]>([]);
 
   const [openFilter, setOpenFilter] = useState(false);
   const { control, handleSubmit, register, reset } = useForm({
@@ -65,7 +63,7 @@ export default function HomePage() {
     },
   });
 
-  const onSubmit: SubmitHandler<IFormInput> = (data) => {
+  const onSubmit: SubmitHandler<IFormInput> = () => {
     setOpenFilter(false);
   };
 

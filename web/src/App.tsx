@@ -11,7 +11,7 @@ import RoutesProvider from "./routes/route";
 import theme from "./theme";
 
 const prefixURL =
-  (prefix: string) => (client: Client) => async (action: Action) => {
+  (prefix: string) => (_client: Client) => async (action: Action) => {
     return {
       ...action,
       endpoint: `${window.location.protocol}//${API_ADDRESS}${prefix}${action.endpoint}`,

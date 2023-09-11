@@ -41,6 +41,7 @@ export default function EmailUpdatePage() {
       });
       if (res.ok) {
         const data = res.json();
+        console.log(data);
         navigate("/me");
       } else {
         const data: ErrorResponse = await res.json();

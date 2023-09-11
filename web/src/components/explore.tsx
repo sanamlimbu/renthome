@@ -214,9 +214,3 @@ const researchingCards: ExploreCardProps[] = [
     linkText: "Browse home loan calculators",
   },
 ];
-
-const allCards = buyingCards.concat(
-  sellingCards,
-  researchingCards,
-  rentingCards
-);

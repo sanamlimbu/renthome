@@ -1,13 +1,9 @@
 import { Box } from "@mui/material";
-import { useContext } from "react";
 import { Outlet } from "react-router-dom";
 import Footer from "../components/footer";
 import NavBar from "../components/navBar";
-import { UserContext } from "../context/user";
 
 export default function RootPage() {
-  const { user } = useContext(UserContext);
-
   // const matchesXs = useMediaQuery("(max-width: 599px)");
   // const matchesSm = useMediaQuery("(min-width: 600px) and (max-width: 959px)");
   // const matchesMd = useMediaQuery("(min-width: 960px) and (max-width: 1279px)");

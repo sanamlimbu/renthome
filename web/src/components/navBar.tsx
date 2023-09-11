@@ -141,7 +141,7 @@ export default function NavBar() {
   );
 }
 
-const NavBarButton = styled(Button)<ButtonProps>(({ theme }) => ({
+const NavBarButton = styled(Button)<ButtonProps>(() => ({
   textTransform: "none",
   fontWeight: "600",
 }));

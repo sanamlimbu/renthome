@@ -39,12 +39,13 @@ export default function PersonalDetails() {
 
         if (res.ok) {
           const data = await res.json();
+          console.log(data);
         }
       } catch (error) {}
     })();
   }, []);
 
-  const { control, handleSubmit, register, reset } = useForm({
+  const { control, handleSubmit, register } = useForm({
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -214,7 +215,4 @@ export default function PersonalDetails() {
       </form>
     </Box>
   );
-}
-function useState<T>(): IFormInput {
-  throw new Error("Function not implemented.");
 }
