@@ -88,7 +88,7 @@ export interface FacebookUser {
   name: string;
 }
 
-export interface SocialType {
+export interface OAuth2Provider {
   name: string;
   bgColor: string;
   color: string;

@@ -1,7 +1,7 @@
 export const API_ADDRESS =
-  import.meta.env.VITE_RENTHOME_API_ADDRESS || "http://localhost:8000";
+  import.meta.env.VITE_RENTHOME_API_ADDRESS || "localhost:8000";
 export const MY_ADDRESS =
-  import.meta.env.VITE_RENTHOME_PUBLIC_ADDRESS || "http://localhost:3000";
+  import.meta.env.VITE_RENTHOME_PUBLIC_ADDRESS || "localhost:3000";
 
 // OAuth Google
 export const GOOGLE_OAUTH_CLIENT_ID = import.meta.env

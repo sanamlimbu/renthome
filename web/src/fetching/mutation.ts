@@ -17,18 +17,20 @@ const fileUpload = (values: {
   };
 };
 
-// const createProperty = (values: CreatePropertyRequest): Action<Property> => {
-//   return {
-//     method: "POST",
-//     endpoint: "/properties",
-//     credentials: "include",
-//     body: values,
-//     responseType: "json",
-//   };
-// };
-
-const googleOAuthLogin = (values: GoogleUser): Action<GoogleAuthResponse> => {};
+const googleOAuth = (values: GoogleUser): Action<GoogleAuthResponse> => {
+  return {
+    method: "POST",
+    endpoint: "/auth/google",
+    credentials: "include",
+    body: values,
+    responseType: "json",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+};
 
 export const mutation = {
   fileUpload,
+  googleOAuth,
 };
