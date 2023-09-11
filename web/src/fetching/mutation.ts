@@ -1,5 +1,4 @@
 import { Action } from "react-fetching-library";
-import { GoogleAuthResponse, GoogleUser } from "../types/types";
 
 const fileUpload = (values: {
   file: File;
@@ -17,20 +16,6 @@ const fileUpload = (values: {
   };
 };
 
-const googleOAuth = (values: GoogleUser): Action<GoogleAuthResponse> => {
-  return {
-    method: "POST",
-    endpoint: "/auth/google",
-    credentials: "include",
-    body: values,
-    responseType: "json",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-};
-
 export const mutation = {
   fileUpload,
-  googleOAuth,
 };
