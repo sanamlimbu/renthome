@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   const onSubmit: SubmitHandler<ILoginInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/login`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

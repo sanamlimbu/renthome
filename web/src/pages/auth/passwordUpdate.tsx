@@ -35,7 +35,7 @@ export default function PasswordUpdatePage() {
 
   const onSubmit: SubmitHandler<IPasswordUpdateInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/change-password`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

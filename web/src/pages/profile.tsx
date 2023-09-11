@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/logout`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

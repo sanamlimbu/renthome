@@ -30,12 +30,15 @@ export default function PersonalDetails() {
   useEffect(() => {
     (async function () {
       try {
-        const res = await fetch(`${API_ADDRESS}/users/?userID:${user?.id}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${getTokenFromLocalStorage()}`,
-          },
-        });
+        const res = await fetch(
+          `${API_ADDRESS}/api/users/?userID:${user?.id}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${getTokenFromLocalStorage()}`,
+            },
+          }
+        );
 
         if (res.ok) {
           const data = await res.json();

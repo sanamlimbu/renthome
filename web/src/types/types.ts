@@ -141,13 +141,10 @@ export interface NotificationState {
   state: string;
 }
 
-// Auth related types and interfaces
+export interface GetNotificationsResponse {
+  notifications: Notification[];
+}
 
 export interface ForgotPasswordResponse {
   reset_token: string;
-}
-
-export interface GoogleAuthResponse {
-  user: User;
-  token: string;
 }

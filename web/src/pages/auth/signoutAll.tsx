@@ -19,7 +19,7 @@ export default function SignoutAllPage() {
 
   const handleSignoutAllDeivces = async () => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/signout-all`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/signout-all`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${getTokenFromLocalStorage()}`,

@@ -45,7 +45,7 @@ export default function SignupPage() {
 
   const onSubmit: SubmitHandler<ISignupInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/signup`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

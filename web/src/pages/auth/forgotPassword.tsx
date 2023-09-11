@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
 
   const onSubmit: SubmitHandler<IForgotPasswordInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/forgot-password`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

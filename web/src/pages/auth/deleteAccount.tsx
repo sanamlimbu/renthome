@@ -31,7 +31,7 @@ export default function DeleteAccountPage() {
 
   const onSubmit: SubmitHandler<IDeleteAccountInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/email-update`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/email-update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

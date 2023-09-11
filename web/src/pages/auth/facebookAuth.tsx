@@ -36,7 +36,7 @@ export default function FacebookAuthRedirectPage() {
           facebookUser.email = "subbasanam08@gmail.com";
         }
 
-        const res = await fetch(`${API_ADDRESS}/auth/facebook`, {
+        const res = await fetch(`${API_ADDRESS}/api/auth/facebook`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
