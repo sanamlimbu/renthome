@@ -147,6 +147,7 @@ export default function SignupPage() {
           )}
           <Button
             variant="contained"
+            color="primary"
             size="large"
             sx={{ textTransform: "none", fontWeight: "600" }}
             type="submit"

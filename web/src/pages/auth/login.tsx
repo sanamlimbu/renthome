@@ -157,6 +157,7 @@ export default function LoginPage() {
           )}
           <Button
             variant="contained"
+            color="primary"
             size="large"
             sx={{ textTransform: "none", fontWeight: "600" }}
             type="submit"

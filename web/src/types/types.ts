@@ -45,6 +45,13 @@ export interface Manager {
   deleted_at?: Date;
 }
 
+export interface Location {
+  id: string;
+  suburb_name: string;
+  post_code: string;
+  state: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -134,6 +141,13 @@ export interface NotificationState {
   state: string;
 }
 
+// Auth related types and interfaces
+
 export interface ForgotPasswordResponse {
   reset_token: string;
+}
+
+export interface GoogleAuthResponse {
+  user: User;
+  token: string;
 }

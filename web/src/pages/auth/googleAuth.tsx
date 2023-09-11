@@ -15,7 +15,7 @@ interface GoogleAuthResponse {
   token: string;
 }
 
-function GoogleAuthRedirectPage() {
+async function GoogleAuthRedirectPage() {
   const parsed = queryString.parse(window.location.hash);
   const token = parsed.access_token;
   const state = parsed.state;
@@ -51,7 +51,7 @@ function GoogleAuthRedirectPage() {
         console.log(error);
       }
     })();
-  }, []);
+  }, [googleUser]);
 
   return <></>;
 }
