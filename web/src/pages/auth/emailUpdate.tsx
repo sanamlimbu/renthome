@@ -31,7 +31,7 @@ export default function EmailUpdatePage() {
 
   const onSubmit: SubmitHandler<IEmailUpdateInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/email-update`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/email-update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -41,6 +41,7 @@ export default function EmailUpdatePage() {
       });
       if (res.ok) {
         const data = res.json();
+        console.log(data);
         navigate("/me");
       } else {
         const data: ErrorResponse = await res.json();

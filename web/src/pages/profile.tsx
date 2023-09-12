@@ -1,15 +1,15 @@
 import { Alert, Box, Button, Snackbar, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ReactComponent as AccountSettings } from "../assets/profile/account-settings.svg";
-import { ReactComponent as Finances } from "../assets/profile/finances.svg";
-import { ReactComponent as MyProfile } from "../assets/profile/my-profile.svg";
-import { ReactComponent as MySavedProperties } from "../assets/profile/my-saved-properties.svg";
-import { ReactComponent as PrivateLandlord } from "../assets/profile/private-landlord.svg";
-import { ReactComponent as RentalApplications } from "../assets/profile/rental-applications.svg";
-import { ReactComponent as RenterProfile } from "../assets/profile/renter-profile.svg";
-import { ReactComponent as SavedSearches } from "../assets/profile/saved-searches.svg";
-import { ReactComponent as TrackProperty } from "../assets/profile/track-property.svg";
+import AccountSettings from "../assets/profile/account-settings.svg";
+import Finances from "../assets/profile/finances.svg";
+import MyProfile from "../assets/profile/my-profile.svg";
+import MySavedProperties from "../assets/profile/my-saved-properties.svg";
+import PrivateLandlord from "../assets/profile/private-landlord.svg";
+import RentalApplications from "../assets/profile/rental-applications.svg";
+import RenterProfile from "../assets/profile/renter-profile.svg";
+import SavedSearches from "../assets/profile/saved-searches.svg";
+import TrackProperty from "../assets/profile/track-property.svg";
 import { API_ADDRESS } from "../config";
 import { UserContext } from "../context/user";
 import {
@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/logout`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export default function ProfilePage() {
         }}
       >
         <ProfileCard
-          icon={TrackProperty}
+          iconSrc={TrackProperty}
           title={"Track your property"}
           shortDescription={
             "Stay up to date with your home or properties you own"
@@ -90,7 +90,7 @@ export default function ProfilePage() {
         />
 
         <ProfileCard
-          icon={MySavedProperties}
+          iconSrc={MySavedProperties}
           title={"My saved properties"}
           shortDescription={
             "View open times and auctions for properties you've saved."
@@ -98,7 +98,7 @@ export default function ProfilePage() {
           link={"collections/saved-properties/"}
         />
         <ProfileCard
-          icon={SavedSearches}
+          iconSrc={SavedSearches}
           title={"Saved searches & alerts"}
           shortDescription={
             "View your saved searches and configure their alerts"
@@ -106,13 +106,13 @@ export default function ProfilePage() {
           link={"saved-searches/"}
         />
         <ProfileCard
-          icon={RenterProfile}
+          iconSrc={RenterProfile}
           title={"Renter Profile"}
           shortDescription={"Create or update your Renter Profile"}
           link={"rent/renter-profile/"}
         />
         <ProfileCard
-          icon={RentalApplications}
+          iconSrc={RentalApplications}
           title={"Rental applications"}
           shortDescription={
             "Track the status and view your rental applications"
@@ -120,7 +120,7 @@ export default function ProfilePage() {
           link={"rent/applications"}
         />
         <ProfileCard
-          icon={Finances}
+          iconSrc={Finances}
           title={"My finances"}
           shortDescription={
             "Financial tools to help you make better property decisions."
@@ -128,7 +128,7 @@ export default function ProfilePage() {
           link={"my-finances/"}
         />
         <ProfileCard
-          icon={AccountSettings}
+          iconSrc={AccountSettings}
           title={"Account settings"}
           shortDescription={
             "Manage your password, email subscriptions and privacy settings."
@@ -136,13 +136,13 @@ export default function ProfilePage() {
           link={"my-real-estate/account/"}
         />
         <ProfileCard
-          icon={MyProfile}
+          iconSrc={MyProfile}
           title={"My profile"}
           shortDescription={"Manage your personal details and property needs."}
           link={"profile/"}
         />
         <ProfileCard
-          icon={PrivateLandlord}
+          iconSrc={PrivateLandlord}
           title={"My rental listing"}
           shortDescription={"Create and manage your rental property listings."}
           link={"advertise-property-for-rent/manage-listings"}
@@ -166,13 +166,13 @@ export default function ProfilePage() {
 }
 
 interface ProfileCardProps {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  title: String;
-  shortDescription: String;
-  link: String;
+  iconSrc: string;
+  title: string;
+  shortDescription: string;
+  link: string;
 }
 function ProfileCard({
-  icon: Icon,
+  iconSrc,
   title,
   shortDescription,
   link,
@@ -189,7 +189,7 @@ function ProfileCard({
       }}
       onClick={() => navigate(`/${link}`)}
     >
-      <Icon />
+      <img src={iconSrc} />
       <Typography
         variant="h4"
         style={{ paddingTop: "0.5em", paddingBottom: "0.5em" }}

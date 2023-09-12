@@ -11,7 +11,7 @@ import {
   GOOGLE_OAUTH_URL,
   GOOGLE_OAUTH_USER_URL,
 } from "../config";
-import { FacebookUser, GoogleUser, SocialType, User } from "../types/types";
+import { FacebookUser, GoogleUser, OAuth2Provider, User } from "../types/types";
 
 export function saveOAuthState(key: string, state: string) {
   sessionStorage.setItem(key, state);
@@ -21,13 +21,14 @@ export function getOAuthState(key: string) {
   return sessionStorage.getItem(key);
 }
 
-// generates state for OAuth
+// Generates unique state for OAuth
 export const generateOAuthState = () => {
   const uuid = uuidv4();
   return uuid;
 };
 
-// retrieves Google user info
+// Retrieves Google user info using token sent to redirect URL by Google OAuth 2.0 server
+// by fetching to Google OAuth 2.0 userinfo endpoint
 export async function getGoogleUser(token: string): Promise<GoogleUser | null> {
   try {
     let res = await fetch(`${GOOGLE_OAUTH_USER_URL}`, {
@@ -50,7 +51,8 @@ export async function getGoogleUser(token: string): Promise<GoogleUser | null> {
   }
 }
 
-// retrieves Facebook user info
+// Retrieves Facebook user info using token sent to redirect URL by Facebook OAuth 2.0 server
+// by fetching to Facebook OAuth 2.0 me endpoint
 export async function getFacebookUser(
   token: string
 ): Promise<FacebookUser | null> {
@@ -79,8 +81,8 @@ export async function getFacebookUser(
   }
 }
 
-// getSocialURL returns social OAuth url and saves CSRF state in session
-export function getSocialURL(type: SocialType): string {
+// Returns OAuth 2.0 endpoint based on the provider and while saving CSRF state in session
+export function getOAuth2Endpoint(type: OAuth2Provider): string {
   let url = "";
   switch (type.name) {
     case "Google": {
@@ -133,35 +135,35 @@ export function getSocialURL(type: SocialType): string {
 //   return parsedUser;
 // }
 
-// retrieves token from local storage
+// Retrieves renthome_token from local storage
 export function getTokenFromLocalStorage(): string | null {
   const storedToken = localStorage.getItem("renthome_token");
   const parsedToken = storedToken ? JSON.parse(storedToken) : null;
   return parsedToken;
 }
 
-// saves token in local storage
+// Saves renthome_token in local storage
 export function saveTokenInLocalStorage(token: string) {
   localStorage.setItem("renthome_token", JSON.stringify(token));
 }
 
-// retrieves reset password token from local storage
+// Retrieves renthome_reset_password_token token from local storage
 export function getResetPasswordTokenFromLocalStorage(): string | null {
   const storedToken = localStorage.getItem("renthome_reset_password_token");
   const parsedToken = storedToken ? JSON.parse(storedToken) : null;
   return parsedToken;
 }
-// saves reset password token in local storage
+// Saves renthome_reset_password_token in local storage
 export function saveResetPasswordTokenInLocalStorage(token: string) {
   localStorage.setItem("renthome_reset_password_token", JSON.stringify(token));
 }
 
-// removes token from local storage
+// Removes renthome_token from local storage
 export function removeTokenFromLocalStorage() {
   localStorage.removeItem("renthome_token");
 }
 
-// removes reset token from local storage
+// Removes renthome_reset_password_token from local storage
 export function removeResetTokenFromLocalStorage() {
   localStorage.removeItem("renthome_reset_password_token");
 }
@@ -171,7 +173,7 @@ interface JwtPayloadWithCustomClaims extends JwtPayload {
   name: string;
   is_verified: string;
 }
-// retrives basic user from token
+// Retrives basic user from renthome_token
 export function getUserFromToken() {
   try {
     const token = getTokenFromLocalStorage();
@@ -200,7 +202,7 @@ export function getUserFromToken() {
   }
 }
 
-// checks if JWT access token is expired
+// Checks if JWT access token (renthome_token) is expired
 export function isTokenExpired() {
   try {
     const token = getTokenFromLocalStorage();

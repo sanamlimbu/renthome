@@ -1,6 +1,6 @@
-import { SocialType } from "./types/types";
+import { OAuth2Provider } from "./types/types";
 
-export const socialList: SocialType[] = [
+export const socialList: OAuth2Provider[] = [
   {
     name: "Google",
     bgColor: "lightgray",

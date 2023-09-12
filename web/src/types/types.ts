@@ -45,6 +45,13 @@ export interface Manager {
   deleted_at?: Date;
 }
 
+export interface Location {
+  id: string;
+  suburb_name: string;
+  post_code: string;
+  state: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -81,7 +88,7 @@ export interface FacebookUser {
   name: string;
 }
 
-export interface SocialType {
+export interface OAuth2Provider {
   name: string;
   bgColor: string;
   color: string;
@@ -132,6 +139,10 @@ export interface PrivacyState {
 export interface NotificationState {
   notification: Notification;
   state: string;
+}
+
+export interface GetNotificationsResponse {
+  notifications: Notification[];
 }
 
 export interface ForgotPasswordResponse {

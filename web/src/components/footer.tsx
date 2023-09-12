@@ -81,7 +81,7 @@ const LinkSpan = styled("span")({
   cursor: "pointer",
 });
 
-const SocialIcon = styled(Icon)<IconProps>(({ theme }) => ({
+const SocialIcon = styled(Icon)<IconProps>(() => ({
   opacity: "0.5",
   "&:hover": {
     opacity: "1",

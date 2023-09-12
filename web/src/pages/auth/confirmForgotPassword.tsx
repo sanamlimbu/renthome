@@ -53,14 +53,17 @@ export default function ConfirmForgotPasswordPage() {
     input
   ) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/forgot-password-confirm`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getResetPasswordTokenFromLocalStorage()}`,
-        },
-        body: JSON.stringify(input),
-      });
+      const res = await fetch(
+        `${API_ADDRESS}/api/auth/forgot-password-confirm`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getResetPasswordTokenFromLocalStorage()}`,
+          },
+          body: JSON.stringify(input),
+        }
+      );
       if (res.ok) {
         const data: ConfirmForgotPasswordResponse = await res.json();
         saveTokenInLocalStorage(data.token);

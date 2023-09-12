@@ -23,7 +23,7 @@ type GetPrivaciesResponse struct {
 	Privacies []*PrivacyState `json:"privacies"`
 }
 
-func (api *APIController) GetPrivaciesHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+func (api *APIController) GetPrivacies(w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &GetPrivaciesRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {

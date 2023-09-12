@@ -1,8 +1,8 @@
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import { Box, Link, Typography, styled } from "@mui/material";
+import { Box, Link, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
-import { ReactComponent as CheckedIcon } from "../assets/icons/checked.svg";
+import CheckedIcon from "../assets/icons/checked.svg";
 
 export default function RenterProfile() {
   const navigate = useNavigate();
@@ -80,12 +80,6 @@ export default function RenterProfile() {
   );
 }
 
-const StyledCheckedIcon = styled(CheckedIcon)({
-  width: "20px",
-  height: "20px",
-  verticalAlign: "middle",
-});
-
 interface PersonalCardProps {
   text: String;
   link: String;
@@ -109,7 +103,15 @@ const PersonalCard = ({ text, link }: PersonalCardProps) => {
       onClick={() => navigate(`${link}`)}
     >
       <span>{text}</span>
-      <StyledCheckedIcon />
+      <img
+        src={CheckedIcon}
+        alt="Checked"
+        style={{
+          width: "20px",
+          height: "20px",
+          verticalAlign: "middle",
+        }}
+      />
     </Typography>
   );
 };

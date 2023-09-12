@@ -39,7 +39,7 @@ export function AccountPage() {
     // fetch user notifications
     (async function () {
       try {
-        const res = await fetch(`${API_ADDRESS}/notifications`, {
+        const res = await fetch(`${API_ADDRESS}/api/notifications`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export function AccountPage() {
     // fetch user privacies
     (async function () {
       try {
-        const res = await fetch(`${API_ADDRESS}/privacies`, {
+        const res = await fetch(`${API_ADDRESS}/api/privacies`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -456,7 +456,7 @@ const NotificationPrivacyUpdateModal = (props: {
     setError("");
     try {
       if (isNotificationState(item)) {
-        const res = await fetch(`${API_ADDRESS}/notifications/update`, {
+        const res = await fetch(`${API_ADDRESS}/api/notifications/update`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -474,7 +474,7 @@ const NotificationPrivacyUpdateModal = (props: {
           setError(data.message);
         }
       } else if (isPrivacyState(item)) {
-        const res = await fetch(`${API_ADDRESS}/privacies/update`, {
+        const res = await fetch(`${API_ADDRESS}/api/privacies/update`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

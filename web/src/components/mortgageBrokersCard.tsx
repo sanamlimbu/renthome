@@ -7,7 +7,6 @@ export interface MortgageBrokersCardProps {
   locationCity: string;
 }
 export default function MortgageBrokersCard({
-  imgSrc,
   companyLogoSrc,
   companyName,
   name,

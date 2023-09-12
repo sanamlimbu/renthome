@@ -16,12 +16,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { SetStateAction, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Explore from "../components/explore";
 import MortgageBrokers from "../components/mortgageBrokers";
 import News from "../components/news";
-import { UserContext } from "../context/user";
 
 interface IFormInput {
   suburb: string;
@@ -40,9 +39,10 @@ interface IFormInput {
 }
 
 export default function HomePage() {
-  const { user } = useContext(UserContext);
   const [filterType, setFilterType] = useState("Rent");
   const [searchType, setSearchType] = useState("Rent");
+  const [searchTerm, setSearchTerm] = useState("");
+  //const [suggestedLocations, setSuggestedLocations] = useState<Location[]>([]);
 
   const [openFilter, setOpenFilter] = useState(false);
   const { control, handleSubmit, register, reset } = useForm({
@@ -63,8 +63,14 @@ export default function HomePage() {
     },
   });
 
-  const onSubmit: SubmitHandler<IFormInput> = (data) => {
+  const onSubmit: SubmitHandler<IFormInput> = () => {
     setOpenFilter(false);
+  };
+
+  const handleSearchTermChange = (event: {
+    target: { value: SetStateAction<string> };
+  }) => {
+    setSearchTerm(event.target.value);
   };
 
   const rentPriceValues = [
@@ -74,6 +80,8 @@ export default function HomePage() {
   const rentBedValues = [1, 2, 3, 4, 5];
   const rentBathValues = [1, 2, 3, 4, 5];
   const rentCarValues = [1, 2, 3, 4, 5];
+
+  console.log(searchTerm);
 
   return (
     <Box>
@@ -188,6 +196,7 @@ export default function HomePage() {
                   : "Search suburb, postcode or state"
               }
               {...register("suburb")}
+              onChange={handleSearchTermChange}
             />
             {searchType !== "Address" && searchType !== "Agents" && (
               <Button

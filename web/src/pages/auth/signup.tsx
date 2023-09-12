@@ -45,7 +45,7 @@ export default function SignupPage() {
 
   const onSubmit: SubmitHandler<ISignupInput> = async (input) => {
     try {
-      const res = await fetch(`${API_ADDRESS}/auth/signup`, {
+      const res = await fetch(`${API_ADDRESS}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +68,7 @@ export default function SignupPage() {
   };
 
   const handleSnackbarClose = (
-    event?: React.SyntheticEvent | Event,
+    _event?: React.SyntheticEvent | Event,
     reason?: string
   ) => {
     if (reason === "clickaway") {
@@ -147,6 +147,7 @@ export default function SignupPage() {
           )}
           <Button
             variant="contained"
+            color="primary"
             size="large"
             sx={{ textTransform: "none", fontWeight: "600" }}
             type="submit"

@@ -29,7 +29,7 @@ type GetNotificationsResponse struct {
 	Notifications []*NotificationState `json:"notifications"`
 }
 
-func (api *APIController) GetNotificationsHandler(w http.ResponseWriter, r *http.Request) (int, error) {
+func (api *APIController) GetNotifications(w http.ResponseWriter, r *http.Request) (int, error) {
 	req := &GetNotificationsRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {

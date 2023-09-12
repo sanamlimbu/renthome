@@ -78,8 +78,8 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL, agentHostURL str
 		r.Put("/properties/{id}", WithError(WithUser(api, api.UpdateProperty)))
 		r.Delete("/properties/{id}", WithError(WithUser(api, api.DeleteProperty)))
 
-		r.Post("/notifications", WithError(api.GetNotificationsHandler))
-		r.Post("/privacies", WithError(api.GetPrivaciesHandler))
+		r.Post("/notifications", WithError(api.GetNotifications))
+		r.Post("/privacies", WithError(api.GetPrivacies))
 		r.Put("/notifications/update", WithError(WithUser(api, api.UpdateNotificationHandler)))
 		r.Put("/privacies/update", WithError(WithUser(api, api.UpdatePrivacyHandler)))
 

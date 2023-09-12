@@ -76,7 +76,7 @@ web-install:
 
 .PHONY: web-watch
 web-watch:
-	cd web/ && npm run start
+	cd web/ && npm run dev
 
 .PHONY: agent-watch
 agent-watch:

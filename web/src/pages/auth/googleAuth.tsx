@@ -26,14 +26,12 @@ function GoogleAuthRedirectPage() {
     navigate("/");
   }
 
-  console.log("hello");
-
   useEffect(() => {
     (async function () {
       try {
         // retrieve Google user
         const googleUser = await getGoogleUser(token as string);
-        const res = await fetch(`${API_ADDRESS}/auth/google`, {
+        const res = await fetch(`${API_ADDRESS}/api/auth/google`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
