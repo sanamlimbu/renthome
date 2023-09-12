@@ -192,29 +192,6 @@ func (api *APIController) DeleteProperty(w http.ResponseWriter, r *http.Request,
 
 }
 
-type TestRequest struct {
-	Name string `json:"name"`
-	Rank int    `json:"rank"`
-}
-
-func (api *APIController) Test(w http.ResponseWriter, r *http.Request) (int, error) {
-	req := &TestRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, err.Error())
-	}
-
-	err = api.Validator.Validate.Struct(req)
-	if err != nil {
-		return http.StatusBadRequest, terror.Error(err, err.Error())
-	}
-
-	fmt.Println(req)
-
-	return 200, nil
-
-}
-
 // parseImages will read a multipart form request and returns slice of Image
 func parseImages(r *http.Request) ([]*boiler.Image, error) {
 
