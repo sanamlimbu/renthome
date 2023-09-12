@@ -123,6 +123,7 @@ func main() {
 					&cli.StringFlag{Name: "database_application_name", Value: "API Server", EnvVars: []string{"RENTHOME_DATABASE_APPLICATION_NAME"}, Usage: "Postgres database name"},
 					&cli.StringFlag{Name: "environment", Value: "development", DefaultText: "development", EnvVars: []string{"RENTHOME_ENVIRONMENT"}, Usage: "This program environment (development, testing, training, staging, production)"},
 					&cli.BoolFlag{Name: "seed", EnvVars: []string{"RENTHOME_DB_SEED"}, Usage: "Seed the database"},
+					&cli.StringFlag{Name: "seed_folder", Value: "./seed/data/", EnvVars: []string{"SEED_FOLDER"}, Usage: "Folder containing CSVs for seeding"},
 				},
 
 				Usage: "seed database",
@@ -134,15 +135,17 @@ func main() {
 					databaseName := c.String("database_name")
 					databaseAppName := c.String("database_application_name")
 					databaseProd := c.Bool("database_prod")
+					seedFolder := c.String("seed_folder")
 
 					// db connection
 					conn, err := connectDB(databaseUser, databasePass, databaseHost, databasePort, databaseName, databaseAppName, Version)
 					if err != nil {
 						return terror.Error(err)
 					}
-					seeder := seed.NewSeeder(conn)
+					seeder := seed.NewSeeder(conn, seedFolder)
 					err = seeder.Run(databaseProd)
 					if err != nil {
+						fmt.Println(err)
 						terror.Echo(err)
 					}
 					return nil

@@ -282,4 +282,19 @@ CREATE TABLE issue_tokens
     blacklisted BOOLEAN     NOT NULL             DEFAULT FALSE
 );
 
+/*************
+ *  Locations  *
+ *************/
+ CREATE TABLE locations
+(
+    id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    suburb              TEXT        NOT NULL,
+    postcode            TEXT UNIQUE NOT NULL,
+    state               TEXT        NOT NULL,
+    description         TEXT        NOT NULL,        
+    created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at          TIMESTAMPTZ
+);
+
 COMMIT;

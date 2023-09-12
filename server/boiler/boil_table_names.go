@@ -8,6 +8,7 @@ var TableNames = struct {
 	Blobs             string
 	Images            string
 	IssueTokens       string
+	Locations         string
 	Notifications     string
 	PasswordHashes    string
 	Privacies         string
@@ -23,6 +24,7 @@ var TableNames = struct {
 	Blobs:             "blobs",
 	Images:            "images",
 	IssueTokens:       "issue_tokens",
+	Locations:         "locations",
 	Notifications:     "notifications",
 	PasswordHashes:    "password_hashes",
 	Privacies:         "privacies",
