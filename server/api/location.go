@@ -24,7 +24,7 @@ func (api *APIController) GetLocations(w http.ResponseWriter, r *http.Request) (
 
 	searchTerm := strings.ToLower(r.URL.Query().Get("search_term"))
 	if searchTerm == "" {
-		return 200, nil
+		return http.StatusBadRequest, fmt.Errorf("no search term provided")
 	}
 
 	if _, err := strconv.Atoi(searchTerm); err == nil {

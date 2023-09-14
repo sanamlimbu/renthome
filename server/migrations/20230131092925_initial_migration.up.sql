@@ -297,4 +297,19 @@ CREATE TABLE issue_tokens
     deleted_at          TIMESTAMPTZ
 );
 
+/*************
+ *  Searches  *
+ *************/
+ CREATE TABLE searches
+(
+    id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID        REFERENCES users (id),
+    device              TEXT        NOT NULL,
+    texts               TEXT[],          
+    created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at          TIMESTAMPTZ
+);
+
+
 COMMIT;
