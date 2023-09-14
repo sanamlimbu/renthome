@@ -10,17 +10,19 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
-  InputAdornment,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from "@mui/material";
-import { SetStateAction, useState } from "react";
+import { SetStateAction, useRef, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import Explore from "../components/explore";
 import MortgageBrokers from "../components/mortgageBrokers";
 import News from "../components/news";
+import SelelectedLocationCard from "../components/selectedLocationCard";
+import SuggestedLocationCard from "../components/suggestLocationCard";
+import { API_ADDRESS } from "../config";
 
 interface IFormInput {
   suburb: string;
@@ -38,11 +40,18 @@ interface IFormInput {
   carMin: string;
 }
 
+interface SuggestedLocationsResponse {
+  locations: string[];
+  total: number;
+}
+
 export default function HomePage() {
   const [filterType, setFilterType] = useState("Rent");
   const [searchType, setSearchType] = useState("Rent");
   const [searchTerm, setSearchTerm] = useState("");
-  //const [suggestedLocations, setSuggestedLocations] = useState<Location[]>([]);
+  const [suggestedLocations, setSuggestedLocations] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const textFieldRef = useRef<HTMLInputElement>();
 
   const [openFilter, setOpenFilter] = useState(false);
   const { control, handleSubmit, register, reset } = useForm({
@@ -71,6 +80,48 @@ export default function HomePage() {
     target: { value: SetStateAction<string> };
   }) => {
     setSearchTerm(event.target.value);
+    fetchSuggestedLocations(event.target.value.toString());
+  };
+
+  const fetchSuggestedLocations = async (searchTerm: string) => {
+    try {
+      if (searchTerm === "") {
+        setSuggestedLocations([]);
+        return;
+      }
+      const res = await fetch(
+        `${API_ADDRESS}/api/locations?` +
+          new URLSearchParams({
+            search_term: searchTerm,
+          }),
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (res.ok) {
+        const data: SuggestedLocationsResponse = await res.json();
+        setSuggestedLocations(data.locations);
+      }
+    } catch (err) {}
+  };
+
+  const onSuggestedLocationSelection = (location: string) => {
+    if (!selectedLocations.includes(location)) {
+      setSelectedLocations([...selectedLocations, location]);
+    }
+    setSuggestedLocations([]);
+    if (textFieldRef.current) {
+      textFieldRef.current.value = "";
+    }
+  };
+
+  const onSuggestedLocationsRemoval = (location: string) => {
+    setSelectedLocations(
+      selectedLocations.filter((_location) => _location !== location)
+    );
   };
 
   const rentPriceValues = [
@@ -179,25 +230,55 @@ export default function HomePage() {
             </Typography>
           </div>
           <Divider />
-          <div style={{ display: "flex", padding: "20px", gap: "12px" }}>
-            <TextField
-              fullWidth
-              size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
+          <Box
+            sx={{
+              display: "flex",
+              paddingTop: "0.5em",
+              paddingBottom: "0.5em",
+              gap: "12px",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              width="100%"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                "&:hover": {
+                  background:
+                    selectedLocations.length > 0 ? "" : "rgb(246,245,247)",
+                },
+                padding: "0.5em",
+                borderRadius: "6px",
+                gap: "2px",
+                flexWrap: selectedLocations.length > 0 ? "wrap" : "",
               }}
-              placeholder={
-                searchType === "Address"
-                  ? "Search by address"
-                  : "Search suburb, postcode or state"
-              }
-              {...register("suburb")}
-              onChange={handleSearchTermChange}
-            />
+            >
+              <Search color="action" />
+              {selectedLocations.map((location, index) => (
+                <SelelectedLocationCard
+                  key={index}
+                  location={location}
+                  handleCancel={onSuggestedLocationsRemoval}
+                />
+              ))}
+              <TextField
+                fullWidth
+                size="small"
+                placeholder={
+                  searchType === "Address"
+                    ? "Search by address"
+                    : "Search suburb, postcode or state"
+                }
+                {...register("suburb")}
+                onChange={handleSearchTermChange}
+                sx={{
+                  "& fieldset": { border: "none" },
+                }}
+                inputRef={textFieldRef}
+              />
+            </Box>
+
             {searchType !== "Address" && searchType !== "Agents" && (
               <Button
                 sx={{
@@ -217,6 +298,30 @@ export default function HomePage() {
             >
               Search
             </Button>
+          </Box>
+          <div>
+            {suggestedLocations.length > 0 && (
+              <div>
+                <Divider />
+                <Typography
+                  sx={{
+                    marginLeft: "0.5em",
+                    marginTop: "0.5em",
+                    marginBottom: "0.5em",
+                    fontWeight: "600",
+                  }}
+                >
+                  Suggested locations
+                </Typography>
+                {suggestedLocations.map((location, index) => (
+                  <SuggestedLocationCard
+                    key={index}
+                    location={location}
+                    handleSelect={onSuggestedLocationSelection}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </Card>
       </Box>

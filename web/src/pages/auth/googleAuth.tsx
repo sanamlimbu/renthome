@@ -27,7 +27,6 @@ function GoogleAuthRedirectPage() {
   }
 
   useEffect(() => {
-    console.log("i fire once");
     (async function () {
       try {
         // retrieve Google user
