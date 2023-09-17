@@ -42,3 +42,9 @@ export enum FilterType {
   Address = "Address",
   Agents = "Agents",
 }
+
+export enum AvailableDateCondition {
+  Before = "Before",
+  After = "After",
+  At = "At",
+}

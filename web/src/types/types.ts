@@ -1,4 +1,8 @@
-import { PropertyCategory, PropertyType } from "./enums";
+import {
+  AvailableDateCondition,
+  PropertyCategory,
+  PropertyType,
+} from "./enums";
 
 export interface Property {
   id: string;
@@ -147,4 +151,33 @@ export interface GetNotificationsResponse {
 
 export interface ForgotPasswordResponse {
   reset_token: string;
+}
+
+interface AvailableDate {
+  date: Date;
+  condition: AvailableDateCondition;
+}
+
+export interface SearchFilter {
+  property_types: string[];
+  property_types_any: boolean;
+  price_min: number;
+  price_max: number;
+  price_min_any: boolean;
+  price_max_any: boolean;
+  bed_min: number;
+  bed_max: number;
+  bed_min_any: boolean;
+  bed_max_any: boolean;
+  bathroom_count: number;
+  bathroom_count_any: boolean;
+  car_count: number;
+  car_count_any: boolean;
+  available_date: AvailableDate;
+  available_date_any: boolean;
+  available_now: boolean;
+  is_furnished: boolean;
+  has_airconditioner: boolean;
+  is_pets_considered: boolean;
+  has_dishwasher: boolean;
 }

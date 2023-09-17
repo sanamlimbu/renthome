@@ -4,6 +4,7 @@ import {
   Navigate,
   RouterProvider,
 } from "react-router-dom";
+import BuyPage from "..//pages/buy/buy";
 import { UserContext } from "../context/user";
 import { AccountPage } from "../pages/account";
 import ConfirmForgotPasswordPage from "../pages/auth/confirmForgotPassword";
@@ -15,7 +16,6 @@ import LoginPage from "../pages/auth/login";
 import PasswordUpdatePage from "../pages/auth/passwordUpdate";
 import SignoutAllPage from "../pages/auth/signoutAll";
 import SignupPage from "../pages/auth/signup";
-import BuyPage from "../pages/buy";
 import FindAgentPage from "../pages/findAgent";
 import HomePage from "../pages/home";
 import ProfilePage from "../pages/profile";

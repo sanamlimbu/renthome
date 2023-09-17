@@ -43,10 +43,12 @@ interface SuggestedLocationsResponse {
   total: number;
 }
 
-export default function SearchBox(props: {
+interface SearchBoxProps {
   searchType: SearchType;
   filterType: FilterType;
-}) {
+}
+
+export default function SearchBox(props: SearchBoxProps) {
   const [filterType, setFilterType] = useState<FilterType>(props.filterType);
   const [searchType, setSearchType] = useState<SearchType>(props.searchType);
   const [searchTerm, setSearchTerm] = useState("");
