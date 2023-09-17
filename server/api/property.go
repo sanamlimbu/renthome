@@ -8,35 +8,69 @@ import (
 	"io/ioutil"
 	"net/http"
 	"renthome/boiler"
+	"time"
 
 	"github.com/h2non/filetype"
 	"github.com/ninja-software/terror/v2"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type Filter struct {
-	All               bool   `json:"all"`
-	House             bool   `json:"house"`
-	Apartment         bool   `json:"apartment"`
-	Unit              bool   `json:"unit"`
-	TownHouse         bool   `json:"town_house"`
-	Villa             bool   `json:"villa"`
-	PriceMin          string `json:"price_min"`
-	PriceMax          string `json:"price_max"`
-	BedMin            string `json:"bed_min"`
-	BedMax            string `json:"bed_max"`
-	BathroomCount     string `json:"bathroom_count"`
-	CarCount          string `json:"car_count"`
-	AvailableDate     string `json:"available_date"`
-	IsFurnished       bool   `json:"is_furnished"`
-	IsPetsConsidered  bool   `json:"is_pets_conisdereed"`
-	HasAirConditioner bool   `json:"has_air_conditioner"`
-	HasDishwasher     bool   `json:"has_dishwasher"`
+type PropertyType string
+
+const (
+	Unit      PropertyType = "Unit"
+	House     PropertyType = "House"
+	Villa     PropertyType = "Villa"
+	Townhouse PropertyType = "Townhouse"
+	Apartment PropertyType = "Apartment"
+)
+
+type AvailableDateCondition string
+
+const (
+	AvailableDateBefore AvailableDateCondition = "Before"
+	AvailableDateAfter  AvailableDateCondition = "After"
+	AvailableDateAt     AvailableDateCondition = "At"
+)
+
+type AvailableDate struct {
+	Date      time.Time              `json:"date"`
+	Condition AvailableDateCondition `json:"condition"`
+}
+
+type SearchFilter struct {
+	PropertyTypes     []string      `json:"property_types"`
+	PropertyTypesAny  bool          `json:"property_types_any"`
+	PriceMin          int           `json:"price_min"`
+	PriceMax          int           `json:"price_max"`
+	PriceMinAny       bool          `json:"price_min_any"`
+	PriceMaxAny       bool          `json:"price_max_any"`
+	BedMin            int           `json:"bed_min"`
+	BedMax            int           `json:"bed_max"`
+	BedMinAny         bool          `json:"bed_min_any"`
+	BedMaxAny         bool          `json:"bed_max_any"`
+	BathroomCount     int           `json:"bathroom_count"`
+	BathroomCountAny  bool          `json:"bathroom_count_any"`
+	CarCount          int           `json:"car_count"`
+	CarCountAny       bool          `json:"car_count_any"`
+	AvailableDate     AvailableDate `json:"available_date"`
+	AvailableDateAny  bool          `json:"available_date_any"`
+	AvailableNow      bool          `json:"available_now"`
+	IsFurnished       bool          `json:"is_furnished"`
+	IsPetsConsidered  bool          `json:"is_pets_conisdereed"`
+	HasAirConditioner bool          `json:"has_air_conditioner"`
+	HasDishwasher     bool          `json:"has_dishwasher"`
 }
 type GetPropertiesRequest struct {
-	Search []string `json:"search"`
-	Filter Filter   `json:"filter"`
+	Locations []string     `json:"locations"`
+	Filter    SearchFilter `json:"filter"`
+}
+
+type GetPropertiesResponse struct {
+	Properties []*boiler.Property `json:"properties"`
+	Total      int                `json:"total"`
 }
 
 func (api *APIController) GetProperties(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -46,8 +80,99 @@ func (api *APIController) GetProperties(w http.ResponseWriter, r *http.Request) 
 		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
 	}
 
-	return 200, nil
+	var properties boiler.PropertySlice
+	var resp *GetPropertiesResponse
+	var conditions []qm.QueryMod
 
+	// Property type
+	if req.Filter.PropertyTypesAny {
+		propertyTypes := []string{
+			string(Unit),
+			string(House),
+			string(Villa),
+			string(Townhouse),
+			string(Apartment),
+		}
+		conditions = append(conditions, boiler.PropertyWhere.Type.IN(propertyTypes))
+	} else {
+		conditions = append(conditions, boiler.PropertyWhere.Type.IN(req.Filter.PropertyTypes))
+	}
+
+	// Price
+	if !req.Filter.PriceMinAny {
+		conditions = append(conditions, boiler.PropertyWhere.Price.GTE(req.Filter.PriceMin))
+
+	}
+	if !req.Filter.PriceMaxAny {
+		conditions = append(conditions, boiler.PropertyWhere.Price.LTE(req.Filter.PriceMax))
+	}
+
+	// Bedroom
+	if !req.Filter.BedMinAny {
+		conditions = append(conditions, boiler.PropertyWhere.BedCount.GTE(req.Filter.BedMin))
+	}
+	if !req.Filter.BedMaxAny {
+		conditions = append(conditions, boiler.PropertyWhere.BedCount.LTE(req.Filter.BedMax))
+	}
+
+	//Bathroom
+	if !req.Filter.BathroomCountAny {
+		conditions = append(conditions, boiler.PropertyWhere.BathCount.GTE(req.Filter.BathroomCount))
+	}
+
+	// Car
+	if !req.Filter.CarCountAny {
+		conditions = append(conditions, boiler.PropertyWhere.CarCount.GTE(req.Filter.CarCount))
+	}
+
+	// Available date
+	if req.Filter.AvailableNow {
+		conditions = append(conditions, boiler.PropertyWhere.IsAvailableNow.EQ(true))
+	} else {
+		if !req.Filter.AvailableDateAny {
+			if req.Filter.AvailableDate.Condition == AvailableDateBefore {
+				conditions = append(conditions, qm.Where("date_trunc('day', ?) < date_trunc('day', ?)", boiler.PropertyColumns.AvailableAt, req.Filter.AvailableDate.Date))
+			} else if req.Filter.AvailableDate.Condition == AvailableDateAfter {
+				conditions = append(conditions, qm.Where("date_trunc('day', ?) > date_trunc('day', ?)", boiler.PropertyColumns.AvailableAt, req.Filter.AvailableDate.Date))
+			} else {
+				conditions = append(conditions, qm.Where("date_trunc('day', ?) = date_trunc('day', ?)", boiler.PropertyColumns.AvailableAt, req.Filter.AvailableDate.Date))
+			}
+		}
+	}
+
+	// Furnished
+	conditions = append(conditions, boiler.PropertyWhere.IsFurnished.EQ(req.Filter.IsFurnished))
+
+	// Pets
+	conditions = append(conditions, boiler.PropertyWhere.IsPetsConsidered.EQ(req.Filter.IsPetsConsidered))
+
+	// Aircon
+	conditions = append(conditions, boiler.PropertyWhere.HasAircon.EQ(req.Filter.HasAirConditioner))
+
+	// Dishwasher
+	conditions = append(conditions, boiler.PropertyWhere.HasDishwasher.EQ(req.Filter.HasAirConditioner))
+
+	// Postcode
+	conditions = append(conditions, boiler.PropertyWhere.Postcode.IN(req.Locations))
+
+	// Location
+	conditions = append(conditions, boiler.PropertyWhere.Location.IN(req.Locations))
+
+	properties, err = boiler.Properties(conditions...).All(api.Conn)
+	if err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
+	}
+
+	resp = &GetPropertiesResponse{
+		Properties: properties,
+		Total:      len(properties),
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		return http.StatusInternalServerError, terror.Error(err, ErrEncodeJSONPayload)
+	}
+
+	return http.StatusOK, nil
 }
 
 func (api *APIController) GetProperty(w http.ResponseWriter, r *http.Request) (int, error) {

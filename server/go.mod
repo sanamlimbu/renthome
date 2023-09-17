@@ -34,6 +34,7 @@ require (
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/ericlagergren/decimal v0.0.0-20211103172832-aca2edc11f73 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
