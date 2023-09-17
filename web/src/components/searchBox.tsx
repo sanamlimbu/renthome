@@ -20,6 +20,7 @@ import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import SelelectedLocationCard from "../components/selectedLocationCard";
 import SuggestedLocationCard from "../components/suggestLocationCard";
 import { API_ADDRESS } from "../config";
+import { FilterType, SearchType } from "../types/enums";
 
 interface IFormInput {
   suburb: string;
@@ -42,9 +43,12 @@ interface SuggestedLocationsResponse {
   total: number;
 }
 
-export default function SearchBox() {
-  const [filterType, setFilterType] = useState("Buy");
-  const [searchType, setSearchType] = useState("Buy");
+export default function SearchBox(props: {
+  searchType: SearchType;
+  filterType: FilterType;
+}) {
+  const [filterType, setFilterType] = useState<FilterType>(props.filterType);
+  const [searchType, setSearchType] = useState<SearchType>(props.searchType);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestedLocations, setSuggestedLocations] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -155,10 +159,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: searchType === "Buy" ? "2px solid blue" : "",
-                textDecoration: searchType === "Buy" ? "none !important" : "",
+                borderBottom:
+                  searchType === SearchType.Buy ? "2px solid blue" : "",
+                textDecoration:
+                  searchType === SearchType.Buy ? "none !important" : "",
               }}
-              onClick={() => setSearchType("Buy")}
+              onClick={() => setSearchType(SearchType.Buy)}
             >
               Buy
             </Typography>
@@ -169,10 +175,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: searchType === "Rent" ? "2px solid blue" : "",
-                textDecoration: searchType === "Rent" ? "none !important" : "",
+                borderBottom:
+                  searchType === SearchType.Rent ? "2px solid blue" : "",
+                textDecoration:
+                  searchType === SearchType.Rent ? "none !important" : "",
               }}
-              onClick={() => setSearchType("Rent")}
+              onClick={() => setSearchType(SearchType.Rent)}
             >
               Rent
             </Typography>
@@ -183,10 +191,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: searchType === "Sold" ? "2px solid blue" : "",
-                textDecoration: searchType === "Sold" ? "none !important" : "",
+                borderBottom:
+                  searchType === SearchType.Sold ? "2px solid blue" : "",
+                textDecoration:
+                  searchType === SearchType.Sold ? "none !important" : "",
               }}
-              onClick={() => setSearchType("Sold")}
+              onClick={() => setSearchType(SearchType.Sold)}
             >
               Sold
             </Typography>
@@ -197,11 +207,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: searchType === "Address" ? "2px solid blue" : "",
+                borderBottom:
+                  searchType === SearchType.Address ? "2px solid blue" : "",
                 textDecoration:
-                  searchType === "Address" ? "none !important" : "",
+                  searchType === SearchType.Address ? "none !important" : "",
               }}
-              onClick={() => setSearchType("Address")}
+              onClick={() => setSearchType(SearchType.Address)}
             >
               Address
             </Typography>
@@ -212,11 +223,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: searchType === "Agents" ? "2px solid blue" : "",
+                borderBottom:
+                  searchType === SearchType.Agents ? "2px solid blue" : "",
                 textDecoration:
-                  searchType === "Agents" ? "none !important" : "",
+                  searchType === SearchType.Agents ? "none !important" : "",
               }}
-              onClick={() => setSearchType("Agents")}
+              onClick={() => setSearchType(SearchType.Agents)}
             >
               Agents
             </Typography>
@@ -359,10 +371,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: filterType === "Buy" ? "2px solid blue" : "",
-                textDecoration: filterType === "Buy" ? "none !important" : "",
+                borderBottom:
+                  filterType === FilterType.Buy ? "2px solid blue" : "",
+                textDecoration:
+                  filterType === FilterType.Buy ? "none !important" : "",
               }}
-              onClick={() => setFilterType("Buy")}
+              onClick={() => setFilterType(FilterType.Buy)}
             >
               Buy
             </Typography>
@@ -373,10 +387,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: filterType === "Rent" ? "2px solid blue" : "",
-                textDecoration: filterType === "Rent" ? "none !important" : "",
+                borderBottom:
+                  filterType === FilterType.Rent ? "2px solid blue" : "",
+                textDecoration:
+                  filterType === FilterType.Rent ? "none !important" : "",
               }}
-              onClick={() => setFilterType("Rent")}
+              onClick={() => setFilterType(FilterType.Rent)}
             >
               Rent
             </Typography>
@@ -387,10 +403,12 @@ export default function SearchBox() {
                 "&:hover": {
                   textDecoration: "underline",
                 },
-                borderBottom: filterType === "Sold" ? "2px solid blue" : "",
-                textDecoration: filterType === "Sold" ? "none !important" : "",
+                borderBottom:
+                  filterType === FilterType.Sold ? "2px solid blue" : "",
+                textDecoration:
+                  filterType === FilterType.Sold ? "none !important" : "",
               }}
-              onClick={() => setFilterType("Sold")}
+              onClick={() => setFilterType(FilterType.Sold)}
             >
               Sold
             </Typography>
