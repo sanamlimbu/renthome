@@ -6,28 +6,28 @@ import {
   Twitter,
   YouTube,
 } from "@mui/icons-material";
-import { Icon, IconProps, Typography } from "@mui/material";
+import { Box, Icon, IconProps, Typography } from "@mui/material";
 import { blue } from "@mui/material/colors";
 
 export default function Footer() {
   return (
-    <div
-      style={{
-        paddingLeft: "20vw",
-        paddingRight: "20vw",
+    <Box
+      sx={{
+        paddingLeft: "10rem",
+        paddingRight: "10rem",
         marginBottom: "2em",
         marginTop: "3em",
       }}
     >
-      <div
-        style={{
+      <Box
+        sx={{
           display: "flex",
           justifyContent: "space-between",
           flexWrap: "wrap",
           gap: "10px",
         }}
       >
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
           <SocialIcon>
             <FacebookOutlined />
           </SocialIcon>
@@ -43,7 +43,7 @@ export default function Footer() {
           <SocialIcon>
             <YouTube />
           </SocialIcon>
-        </div>
+        </Box>
         <Typography sx={{ display: "flex", gap: "1em" }}>
           <LinkSpan>Advertise with us</LinkSpan>
           <LinkSpan>Contact us</LinkSpan>
@@ -54,25 +54,27 @@ export default function Footer() {
           <LinkSpan>Site map </LinkSpan>
           <LinkSpan>Career</LinkSpan>
         </Typography>
-      </div>
+      </Box>
       <Typography
         sx={{
           fontSize: "14px",
           opacity: "0.5",
           textAlign: "center",
           marginTop: "1em",
+          fontWeight: "bold",
         }}
       >
         Copyright © {new Date().getFullYear()} renthome.com.au, all rights
         reserved.
       </Typography>
-    </div>
+    </Box>
   );
 }
 
 const LinkSpan = styled("span")({
   fontSize: "14px",
   opacity: "0.5",
+  fontWeight: "bold",
   "&:hover": {
     textDecoration: "underline",
     color: blue[500],
@@ -87,5 +89,4 @@ const SocialIcon = styled(Icon)<IconProps>(() => ({
     opacity: "1",
   },
   cursor: "pointer",
-  size: "small",
 }));
