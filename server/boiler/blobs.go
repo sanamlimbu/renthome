@@ -840,7 +840,7 @@ func (blobL) LoadProperties(e boil.Executor, singular bool, maybeBlob interface{
 	}
 
 	query := NewQuery(
-		qm.Select("\"properties\".\"id\", \"properties\".\"slug\", \"properties\".\"type\", \"properties\".\"category\", \"properties\".\"street\", \"properties\".\"suburb\", \"properties\".\"postcode\", \"properties\".\"state\", \"properties\".\"bed_count\", \"properties\".\"bath_count\", \"properties\".\"car_count\", \"properties\".\"has_aircon\", \"properties\".\"is_furnished\", \"properties\".\"is_pets_considered\", \"properties\".\"available_at\", \"properties\".\"open_at\", \"properties\".\"price\", \"properties\".\"agency_id\", \"properties\".\"manager_id\", \"properties\".\"keywords\", \"properties\".\"created_at\", \"properties\".\"updated_at\", \"properties\".\"deleted_at\", \"a\".\"blob_id\""),
+		qm.Select("\"properties\".\"id\", \"properties\".\"slug\", \"properties\".\"type\", \"properties\".\"category\", \"properties\".\"street\", \"properties\".\"suburb\", \"properties\".\"postcode\", \"properties\".\"state\", \"properties\".\"location\", \"properties\".\"bed_count\", \"properties\".\"bath_count\", \"properties\".\"car_count\", \"properties\".\"has_aircon\", \"properties\".\"has_dishwasher\", \"properties\".\"is_furnished\", \"properties\".\"is_pets_considered\", \"properties\".\"available_at\", \"properties\".\"is_available_now\", \"properties\".\"open_at\", \"properties\".\"price\", \"properties\".\"agency_id\", \"properties\".\"manager_id\", \"properties\".\"keywords\", \"properties\".\"created_at\", \"properties\".\"updated_at\", \"properties\".\"deleted_at\", \"a\".\"blob_id\""),
 		qm.From("\"properties\""),
 		qm.InnerJoin("\"property_blobs\" as \"a\" on \"properties\".\"id\" = \"a\".\"property_id\""),
 		qm.WhereIn("\"a\".\"blob_id\" in ?", args...),
@@ -862,7 +862,7 @@ func (blobL) LoadProperties(e boil.Executor, singular bool, maybeBlob interface{
 		one := new(Property)
 		var localJoinCol string
 
-		err = results.Scan(&one.ID, &one.Slug, &one.Type, &one.Category, &one.Street, &one.Suburb, &one.Postcode, &one.State, &one.BedCount, &one.BathCount, &one.CarCount, &one.HasAircon, &one.IsFurnished, &one.IsPetsConsidered, &one.AvailableAt, &one.OpenAt, &one.Price, &one.AgencyID, &one.ManagerID, &one.Keywords, &one.CreatedAt, &one.UpdatedAt, &one.DeletedAt, &localJoinCol)
+		err = results.Scan(&one.ID, &one.Slug, &one.Type, &one.Category, &one.Street, &one.Suburb, &one.Postcode, &one.State, &one.Location, &one.BedCount, &one.BathCount, &one.CarCount, &one.HasAircon, &one.HasDishwasher, &one.IsFurnished, &one.IsPetsConsidered, &one.AvailableAt, &one.IsAvailableNow, &one.OpenAt, &one.Price, &one.AgencyID, &one.ManagerID, &one.Keywords, &one.CreatedAt, &one.UpdatedAt, &one.DeletedAt, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for properties")
 		}

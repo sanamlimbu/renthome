@@ -2,8 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"encoding/json"
-	"net/http"
 	"renthome"
 	"renthome/email"
 	"time"
@@ -83,34 +81,10 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL, agentHostURL str
 		r.Put("/notifications/update", WithError(WithUser(api, api.UpdateNotificationHandler)))
 		r.Put("/privacies/update", WithError(WithUser(api, api.UpdatePrivacyHandler)))
 
-		r.Post("/test", WithError(api.Test))
-
 		r.Post("/files/upload", WithError(WithUser(api, api.FileUpload)))
-		r.Get("/hello", hello)
+
+		r.Post("/locations", WithError(api.GetLocations))
 	})
 
 	return r
-}
-
-type ResponseData struct {
-	Message string `json:"message"`
-}
-
-func hello(w http.ResponseWriter, r *http.Request) {
-	data := ResponseData{
-		Message: "hello",
-	}
-
-	// Marshal the data into JSON format
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set the Content-Type header to indicate JSON response
-	w.Header().Set("Content-Type", "application/json")
-
-	// Write the JSON response to the http.ResponseWriter
-	w.Write(jsonData)
 }

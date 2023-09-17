@@ -31,19 +31,21 @@ function GoogleAuthRedirectPage() {
       try {
         // retrieve Google user
         const googleUser = await getGoogleUser(token as string);
-        const res = await fetch(`${API_ADDRESS}/api/auth/google`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(googleUser),
-        });
+        if (googleUser) {
+          const res = await fetch(`${API_ADDRESS}/api/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(googleUser),
+          });
 
-        if (res.ok) {
-          const data: GoogleAuthResponse = await res.json();
-          saveTokenInLocalStorage(data.token);
-          setUser(data.user);
-          navigate("/");
+          if (res.ok) {
+            const data: GoogleAuthResponse = await res.json();
+            saveTokenInLocalStorage(data.token);
+            setUser(data.user);
+            navigate("/");
+          }
         }
       } catch (error) {
         console.log(error);

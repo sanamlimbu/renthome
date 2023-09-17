@@ -1,12 +1,12 @@
 import { Box, Typography } from "@mui/material";
-import Banner from "../assets/banner.avif";
-import Explore from "../components/explore";
-import MortgageBrokers from "../components/mortgageBrokers";
-import News from "../components/news";
-import SearchBox from "../components/searchBox";
-import { FilterType, SearchType } from "../types/enums";
+import Banner from "../../assets/banner.avif";
+import Explore from "../../components/explore";
+import MortgageBrokers from "../../components/mortgageBrokers";
+import News from "../../components/news";
+import SearchBox from "../../components/searchBox";
+import { FilterType, SearchType } from "../../types/enums";
 
-export default function RentPage() {
+export default function BuyPage() {
   return (
     <Box>
       <Box
@@ -34,12 +34,9 @@ export default function RentPage() {
               marginBottom: "1.2rem",
             }}
           >
-            Search rental properties
+            Search properties for sale
           </Typography>
-          <SearchBox
-            filterType={FilterType.Rent}
-            searchType={SearchType.Rent}
-          />
+          <SearchBox filterType={FilterType.Buy} searchType={SearchType.Buy} />
         </Box>
         <Box
           sx={{

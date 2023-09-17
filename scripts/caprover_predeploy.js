@@ -36,7 +36,7 @@ var preDeployFunction = async function (captainAppObj, dockerUpdateObject) {
       "/app/migrations",
       "up",
     ]);
-    await run(["/app/server/main", "db", "--seed"]);
+    await run(["/app/main", "db", "--seed"]);
 
     // migrate only
     // await run([

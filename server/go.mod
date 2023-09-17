@@ -34,10 +34,12 @@ require (
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/ericlagergren/decimal v0.0.0-20211103172832-aca2edc11f73 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d // indirect
 	github.com/gohugoio/hugo v0.111.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect

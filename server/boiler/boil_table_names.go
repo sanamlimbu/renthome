@@ -8,6 +8,7 @@ var TableNames = struct {
 	Blobs             string
 	Images            string
 	IssueTokens       string
+	Locations         string
 	Notifications     string
 	PasswordHashes    string
 	Privacies         string
@@ -15,6 +16,7 @@ var TableNames = struct {
 	PropertyBlobs     string
 	ResetPasswords    string
 	SchemaMigrations  string
+	Searches          string
 	UserNotifications string
 	UserPrivacies     string
 	Users             string
@@ -23,6 +25,7 @@ var TableNames = struct {
 	Blobs:             "blobs",
 	Images:            "images",
 	IssueTokens:       "issue_tokens",
+	Locations:         "locations",
 	Notifications:     "notifications",
 	PasswordHashes:    "password_hashes",
 	Privacies:         "privacies",
@@ -30,6 +33,7 @@ var TableNames = struct {
 	PropertyBlobs:     "property_blobs",
 	ResetPasswords:    "reset_passwords",
 	SchemaMigrations:  "schema_migrations",
+	Searches:          "searches",
 	UserNotifications: "user_notifications",
 	UserPrivacies:     "user_privacies",
 	Users:             "users",

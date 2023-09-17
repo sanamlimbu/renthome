@@ -17,4 +17,6 @@ DROP TABLE privacies;
 DROP TABLE images;
 DROP TABLE users;
 DROP TABLE blobs;
+DROP TABLE locations;
+DROP TABLE searches;
 COMMIT;

@@ -109,8 +109,8 @@ export function getOAuth2Endpoint(type: OAuth2Provider): string {
       const state = generateOAuthState();
       saveOAuthState("FACEBOOK_OAUTH_STATE", state);
       const options = {
-        redirect_uri: FACEBOOK_OAUTH_REDIRECT_URI as string,
-        client_id: FACEBOOK_OAUTH_CLIENT_ID as string,
+        redirect_uri: FACEBOOK_OAUTH_REDIRECT_URI,
+        client_id: FACEBOOK_OAUTH_CLIENT_ID,
         response_type: "token",
         state: state,
       };

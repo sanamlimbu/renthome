@@ -26,3 +26,25 @@ export enum ExploreType {
   Selling = "Selling",
   Researching = "Researching",
 }
+
+export enum SearchType {
+  Buy = "Buy",
+  Rent = "Rent",
+  Sold = "Sold",
+  Address = "Address",
+  Agents = "Agents",
+}
+
+export enum FilterType {
+  Buy = "Buy",
+  Rent = "Rent",
+  Sold = "Sold",
+  Address = "Address",
+  Agents = "Agents",
+}
+
+export enum AvailableDateCondition {
+  Before = "Before",
+  After = "After",
+  At = "At",
+}

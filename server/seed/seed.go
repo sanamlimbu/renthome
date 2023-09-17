@@ -4,21 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path"
 	"renthome/boiler"
 	"strings"
 
+	"github.com/gocarina/gocsv"
+	"github.com/ninja-software/terror/v2"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Seeder struct {
-	Conn *sql.DB
+	Conn       *sql.DB
+	SeedFolder string
 }
 
 // NewSeeder returns a new Seeder
-func NewSeeder(conn *sql.DB) *Seeder {
-	s := &Seeder{conn}
+func NewSeeder(conn *sql.DB, seedFolder string) *Seeder {
+	s := &Seeder{conn, seedFolder}
 	return s
 }
 
@@ -50,6 +55,13 @@ func (s *Seeder) Run(isProd bool) error {
 	err = seedUsers(ctx, s.Conn)
 	if err != nil {
 		fmt.Println("Failed seeding users")
+		return err
+	}
+
+	fmt.Println("Seeding locations")
+	err = seedLocations(ctx, s.Conn, s.SeedFolder)
+	if err != nil {
+		fmt.Println("Failed to seed locations")
 		return err
 	}
 
@@ -370,6 +382,52 @@ func seedAgencies(ctx context.Context, conn *sql.DB) error {
 			return err
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type LocationCSV struct {
+	Suburb   string `csv:"suburb"`
+	Postcode string `csv:"postcode"`
+	State    string `csv:"state"`
+}
+
+func seedLocations(ctx context.Context, conn *sql.DB, seedFolder string) error {
+	locations := []*LocationCSV{}
+	f, err := os.Open(path.Join(seedFolder, "/suburbs.csv"))
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	if err = gocsv.UnmarshalFile(f, &locations); err != nil {
+		return terror.Error(err, "unmarshal suburbs csv")
+	}
+
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	for _, loc := range locations {
+		location := &boiler.Location{
+			Suburb:      loc.Suburb,
+			Postcode:    loc.Postcode,
+			State:       loc.State,
+			Description: fmt.Sprintf("%s, %s %s", loc.Suburb, loc.State, loc.Postcode),
+		}
+
+		location.Insert(tx, boil.Infer())
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return err

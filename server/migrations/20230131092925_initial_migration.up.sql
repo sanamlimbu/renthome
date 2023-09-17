@@ -146,13 +146,16 @@ CREATE TABLE reset_passwords
     suburb              TEXT        NOT NULL,
     postcode            TEXT        NOT NULL,
     state               TEXT        NOT NULL CHECK (state IN ('NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT')),     
+    location            TEXT        NOT NULL,
     bed_count           INTEGER     NOT NULL,
     bath_count          INTEGER     NOT NULL,
     car_count           INTEGER     NOT NULL,
-    has_aircon          BOOLEAN     NOT NULL DEFAULT FALSE,
+    has_aircon          BOOLEAN     NOT NULL DEFAULT TRUE,
+    has_dishwasher      BOOLEAN     NOT NULL DEFAULT TRUE,
     is_furnished        BOOLEAN     NOT NULL DEFAULT FALSE,
     is_pets_considered  BOOLEAN     NOT NULL DEFAULT FALSE,
     available_at        TIMESTAMPTZ,
+    is_available_now    BOOLEAN    NOT NULL DEFAULT FALSE,
     open_at             TIMESTAMPTZ,
     price               INTEGER     NOT NULL,
     agency_id           UUID        NOT NULL REFERENCES agencies (id),
@@ -281,5 +284,35 @@ CREATE TABLE issue_tokens
     expires_at  TIMESTAMPTZ NOT NULL,
     blacklisted BOOLEAN     NOT NULL             DEFAULT FALSE
 );
+
+/*************
+ *  Locations  *
+ *************/
+ CREATE TABLE locations
+(
+    id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    suburb              TEXT        NOT NULL,
+    postcode            TEXT UNIQUE NOT NULL,
+    state               TEXT        NOT NULL,
+    description         TEXT        NOT NULL,        
+    created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at          TIMESTAMPTZ
+);
+
+/*************
+ *  Searches  *
+ *************/
+ CREATE TABLE searches
+(
+    id                  UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID        REFERENCES users (id),
+    device              TEXT        NOT NULL,
+    texts               TEXT[],          
+    created_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL             DEFAULT NOW(),
+    deleted_at          TIMESTAMPTZ
+);
+
 
 COMMIT;

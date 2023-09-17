@@ -31,13 +31,16 @@ type Property struct {
 	Suburb           string      `boiler:"suburb" boil:"suburb" json:"suburb" toml:"suburb" yaml:"suburb"`
 	Postcode         string      `boiler:"postcode" boil:"postcode" json:"postcode" toml:"postcode" yaml:"postcode"`
 	State            string      `boiler:"state" boil:"state" json:"state" toml:"state" yaml:"state"`
+	Location         string      `boiler:"location" boil:"location" json:"location" toml:"location" yaml:"location"`
 	BedCount         int         `boiler:"bed_count" boil:"bed_count" json:"bed_count" toml:"bed_count" yaml:"bed_count"`
 	BathCount        int         `boiler:"bath_count" boil:"bath_count" json:"bath_count" toml:"bath_count" yaml:"bath_count"`
 	CarCount         int         `boiler:"car_count" boil:"car_count" json:"car_count" toml:"car_count" yaml:"car_count"`
 	HasAircon        bool        `boiler:"has_aircon" boil:"has_aircon" json:"has_aircon" toml:"has_aircon" yaml:"has_aircon"`
+	HasDishwasher    bool        `boiler:"has_dishwasher" boil:"has_dishwasher" json:"has_dishwasher" toml:"has_dishwasher" yaml:"has_dishwasher"`
 	IsFurnished      bool        `boiler:"is_furnished" boil:"is_furnished" json:"is_furnished" toml:"is_furnished" yaml:"is_furnished"`
 	IsPetsConsidered bool        `boiler:"is_pets_considered" boil:"is_pets_considered" json:"is_pets_considered" toml:"is_pets_considered" yaml:"is_pets_considered"`
 	AvailableAt      null.Time   `boiler:"available_at" boil:"available_at" json:"available_at,omitempty" toml:"available_at" yaml:"available_at,omitempty"`
+	IsAvailableNow   bool        `boiler:"is_available_now" boil:"is_available_now" json:"is_available_now" toml:"is_available_now" yaml:"is_available_now"`
 	OpenAt           null.Time   `boiler:"open_at" boil:"open_at" json:"open_at,omitempty" toml:"open_at" yaml:"open_at,omitempty"`
 	Price            int         `boiler:"price" boil:"price" json:"price" toml:"price" yaml:"price"`
 	AgencyID         string      `boiler:"agency_id" boil:"agency_id" json:"agency_id" toml:"agency_id" yaml:"agency_id"`
@@ -60,13 +63,16 @@ var PropertyColumns = struct {
 	Suburb           string
 	Postcode         string
 	State            string
+	Location         string
 	BedCount         string
 	BathCount        string
 	CarCount         string
 	HasAircon        string
+	HasDishwasher    string
 	IsFurnished      string
 	IsPetsConsidered string
 	AvailableAt      string
+	IsAvailableNow   string
 	OpenAt           string
 	Price            string
 	AgencyID         string
@@ -84,13 +90,16 @@ var PropertyColumns = struct {
 	Suburb:           "suburb",
 	Postcode:         "postcode",
 	State:            "state",
+	Location:         "location",
 	BedCount:         "bed_count",
 	BathCount:        "bath_count",
 	CarCount:         "car_count",
 	HasAircon:        "has_aircon",
+	HasDishwasher:    "has_dishwasher",
 	IsFurnished:      "is_furnished",
 	IsPetsConsidered: "is_pets_considered",
 	AvailableAt:      "available_at",
+	IsAvailableNow:   "is_available_now",
 	OpenAt:           "open_at",
 	Price:            "price",
 	AgencyID:         "agency_id",
@@ -110,13 +119,16 @@ var PropertyTableColumns = struct {
 	Suburb           string
 	Postcode         string
 	State            string
+	Location         string
 	BedCount         string
 	BathCount        string
 	CarCount         string
 	HasAircon        string
+	HasDishwasher    string
 	IsFurnished      string
 	IsPetsConsidered string
 	AvailableAt      string
+	IsAvailableNow   string
 	OpenAt           string
 	Price            string
 	AgencyID         string
@@ -134,13 +146,16 @@ var PropertyTableColumns = struct {
 	Suburb:           "properties.suburb",
 	Postcode:         "properties.postcode",
 	State:            "properties.state",
+	Location:         "properties.location",
 	BedCount:         "properties.bed_count",
 	BathCount:        "properties.bath_count",
 	CarCount:         "properties.car_count",
 	HasAircon:        "properties.has_aircon",
+	HasDishwasher:    "properties.has_dishwasher",
 	IsFurnished:      "properties.is_furnished",
 	IsPetsConsidered: "properties.is_pets_considered",
 	AvailableAt:      "properties.available_at",
+	IsAvailableNow:   "properties.is_available_now",
 	OpenAt:           "properties.open_at",
 	Price:            "properties.price",
 	AgencyID:         "properties.agency_id",
@@ -162,13 +177,16 @@ var PropertyWhere = struct {
 	Suburb           whereHelperstring
 	Postcode         whereHelperstring
 	State            whereHelperstring
+	Location         whereHelperstring
 	BedCount         whereHelperint
 	BathCount        whereHelperint
 	CarCount         whereHelperint
 	HasAircon        whereHelperbool
+	HasDishwasher    whereHelperbool
 	IsFurnished      whereHelperbool
 	IsPetsConsidered whereHelperbool
 	AvailableAt      whereHelpernull_Time
+	IsAvailableNow   whereHelperbool
 	OpenAt           whereHelpernull_Time
 	Price            whereHelperint
 	AgencyID         whereHelperstring
@@ -186,13 +204,16 @@ var PropertyWhere = struct {
 	Suburb:           whereHelperstring{field: "\"properties\".\"suburb\""},
 	Postcode:         whereHelperstring{field: "\"properties\".\"postcode\""},
 	State:            whereHelperstring{field: "\"properties\".\"state\""},
+	Location:         whereHelperstring{field: "\"properties\".\"location\""},
 	BedCount:         whereHelperint{field: "\"properties\".\"bed_count\""},
 	BathCount:        whereHelperint{field: "\"properties\".\"bath_count\""},
 	CarCount:         whereHelperint{field: "\"properties\".\"car_count\""},
 	HasAircon:        whereHelperbool{field: "\"properties\".\"has_aircon\""},
+	HasDishwasher:    whereHelperbool{field: "\"properties\".\"has_dishwasher\""},
 	IsFurnished:      whereHelperbool{field: "\"properties\".\"is_furnished\""},
 	IsPetsConsidered: whereHelperbool{field: "\"properties\".\"is_pets_considered\""},
 	AvailableAt:      whereHelpernull_Time{field: "\"properties\".\"available_at\""},
+	IsAvailableNow:   whereHelperbool{field: "\"properties\".\"is_available_now\""},
 	OpenAt:           whereHelpernull_Time{field: "\"properties\".\"open_at\""},
 	Price:            whereHelperint{field: "\"properties\".\"price\""},
 	AgencyID:         whereHelperstring{field: "\"properties\".\"agency_id\""},
@@ -261,9 +282,9 @@ func (r *propertyR) GetBlobs() BlobSlice {
 type propertyL struct{}
 
 var (
-	propertyAllColumns            = []string{"id", "slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "has_aircon", "is_furnished", "is_pets_considered", "available_at", "open_at", "price", "agency_id", "manager_id", "keywords", "created_at", "updated_at", "deleted_at"}
-	propertyColumnsWithoutDefault = []string{"slug", "type", "category", "street", "suburb", "postcode", "state", "bed_count", "bath_count", "car_count", "price", "agency_id", "manager_id"}
-	propertyColumnsWithDefault    = []string{"id", "has_aircon", "is_furnished", "is_pets_considered", "available_at", "open_at", "keywords", "created_at", "updated_at", "deleted_at"}
+	propertyAllColumns            = []string{"id", "slug", "type", "category", "street", "suburb", "postcode", "state", "location", "bed_count", "bath_count", "car_count", "has_aircon", "has_dishwasher", "is_furnished", "is_pets_considered", "available_at", "is_available_now", "open_at", "price", "agency_id", "manager_id", "keywords", "created_at", "updated_at", "deleted_at"}
+	propertyColumnsWithoutDefault = []string{"slug", "type", "category", "street", "suburb", "postcode", "state", "location", "bed_count", "bath_count", "car_count", "price", "agency_id", "manager_id"}
+	propertyColumnsWithDefault    = []string{"id", "has_aircon", "has_dishwasher", "is_furnished", "is_pets_considered", "available_at", "is_available_now", "open_at", "keywords", "created_at", "updated_at", "deleted_at"}
 	propertyPrimaryKeyColumns     = []string{"id"}
 	propertyGeneratedColumns      = []string{}
 )

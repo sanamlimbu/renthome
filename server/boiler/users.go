@@ -191,6 +191,7 @@ var UserRels = struct {
 	UploaderImages    string
 	IssueTokens       string
 	ManagerProperties string
+	Searches          string
 	UserNotifications string
 	UserPrivacies     string
 }{
@@ -201,6 +202,7 @@ var UserRels = struct {
 	UploaderImages:    "UploaderImages",
 	IssueTokens:       "IssueTokens",
 	ManagerProperties: "ManagerProperties",
+	Searches:          "Searches",
 	UserNotifications: "UserNotifications",
 	UserPrivacies:     "UserPrivacies",
 }
@@ -214,6 +216,7 @@ type userR struct {
 	UploaderImages    ImageSlice            `boiler:"UploaderImages" boil:"UploaderImages" json:"UploaderImages" toml:"UploaderImages" yaml:"UploaderImages"`
 	IssueTokens       IssueTokenSlice       `boiler:"IssueTokens" boil:"IssueTokens" json:"IssueTokens" toml:"IssueTokens" yaml:"IssueTokens"`
 	ManagerProperties PropertySlice         `boiler:"ManagerProperties" boil:"ManagerProperties" json:"ManagerProperties" toml:"ManagerProperties" yaml:"ManagerProperties"`
+	Searches          SearchSlice           `boiler:"Searches" boil:"Searches" json:"Searches" toml:"Searches" yaml:"Searches"`
 	UserNotifications UserNotificationSlice `boiler:"UserNotifications" boil:"UserNotifications" json:"UserNotifications" toml:"UserNotifications" yaml:"UserNotifications"`
 	UserPrivacies     UserPrivacySlice      `boiler:"UserPrivacies" boil:"UserPrivacies" json:"UserPrivacies" toml:"UserPrivacies" yaml:"UserPrivacies"`
 }
@@ -270,6 +273,13 @@ func (r *userR) GetManagerProperties() PropertySlice {
 		return nil
 	}
 	return r.ManagerProperties
+}
+
+func (r *userR) GetSearches() SearchSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Searches
 }
 
 func (r *userR) GetUserNotifications() UserNotificationSlice {
@@ -623,6 +633,20 @@ func (o *User) ManagerProperties(mods ...qm.QueryMod) propertyQuery {
 	)
 
 	return Properties(queryMods...)
+}
+
+// Searches retrieves all the search's Searches with an executor.
+func (o *User) Searches(mods ...qm.QueryMod) searchQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"searches\".\"user_id\"=?", o.ID),
+	)
+
+	return Searches(queryMods...)
 }
 
 // UserNotifications retrieves all the user_notification's UserNotifications with an executor.
@@ -1483,6 +1507,121 @@ func (userL) LoadManagerProperties(e boil.Executor, singular bool, maybeUser int
 	return nil
 }
 
+// LoadSearches allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadSearches(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`searches`),
+		qm.WhereIn(`searches.user_id in ?`, args...),
+		qmhelper.WhereIsNull(`searches.deleted_at`),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load searches")
+	}
+
+	var resultSlice []*Search
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice searches")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on searches")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for searches")
+	}
+
+	if len(searchAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Searches = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &searchR{}
+			}
+			foreign.R.User = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.UserID) {
+				local.R.Searches = append(local.R.Searches, foreign)
+				if foreign.R == nil {
+					foreign.R = &searchR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // LoadUserNotifications allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (userL) LoadUserNotifications(e boil.Executor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
@@ -2120,6 +2259,131 @@ func (o *User) AddManagerProperties(exec boil.Executor, insert bool, related ...
 			rel.R.Manager = o
 		}
 	}
+	return nil
+}
+
+// AddSearches adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.Searches.
+// Sets related.R.User appropriately.
+func (o *User) AddSearches(exec boil.Executor, insert bool, related ...*Search) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.UserID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"searches\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+				strmangle.WhereClause("\"", "\"", 2, searchPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.UserID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userR{
+			Searches: related,
+		}
+	} else {
+		o.R.Searches = append(o.R.Searches, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &searchR{
+				User: o,
+			}
+		} else {
+			rel.R.User = o
+		}
+	}
+	return nil
+}
+
+// SetSearches removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.User's Searches accordingly.
+// Replaces o.R.Searches with related.
+// Sets related.R.User's Searches accordingly.
+func (o *User) SetSearches(exec boil.Executor, insert bool, related ...*Search) error {
+	query := "update \"searches\" set \"user_id\" = null where \"user_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, query)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+	_, err := exec.Exec(query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.Searches {
+			queries.SetScanner(&rel.UserID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.User = nil
+		}
+		o.R.Searches = nil
+	}
+
+	return o.AddSearches(exec, insert, related...)
+}
+
+// RemoveSearches relationships from objects passed in.
+// Removes related items from R.Searches (uses pointer comparison, removal does not keep order)
+// Sets related.R.User.
+func (o *User) RemoveSearches(exec boil.Executor, related ...*Search) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.UserID, nil)
+		if rel.R != nil {
+			rel.R.User = nil
+		}
+		if _, err = rel.Update(exec, boil.Whitelist("user_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Searches {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Searches)
+			if ln > 1 && i < ln-1 {
+				o.R.Searches[i] = o.R.Searches[ln-1]
+			}
+			o.R.Searches = o.R.Searches[:ln-1]
+			break
+		}
+	}
+
 	return nil
 }
 
