@@ -4,6 +4,7 @@ import Explore from "../components/explore";
 import MortgageBrokers from "../components/mortgageBrokers";
 import News from "../components/news";
 import SearchBox from "../components/searchBox";
+import { FilterType, SearchType } from "../types/enums";
 
 export default function HomePage() {
   return (
@@ -35,7 +36,7 @@ export default function HomePage() {
           >
             Properties to call home
           </Typography>
-          <SearchBox />
+          <SearchBox filterType={FilterType.Buy} searchType={SearchType.Buy} />
         </Box>
         <Box
           sx={{
