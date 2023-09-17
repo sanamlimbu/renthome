@@ -16,6 +16,7 @@ var TableNames = struct {
 	PropertyBlobs     string
 	ResetPasswords    string
 	SchemaMigrations  string
+	Searches          string
 	UserNotifications string
 	UserPrivacies     string
 	Users             string
@@ -32,6 +33,7 @@ var TableNames = struct {
 	PropertyBlobs:     "property_blobs",
 	ResetPasswords:    "reset_passwords",
 	SchemaMigrations:  "schema_migrations",
+	Searches:          "searches",
 	UserNotifications: "user_notifications",
 	UserPrivacies:     "user_privacies",
 	Users:             "users",
