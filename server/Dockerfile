@@ -32,6 +32,7 @@ WORKDIR /app
 COPY --from=builder /app/bin ./bin
 COPY --from=builder /app/main ./main
 COPY --from=builder /app/server/migrations ./migrations
+COPY --from=builder /app/server/seed/data ./seed/data
 COPY --from=builder /app/server/email/templates ./email/templates
 
 EXPOSE 80
