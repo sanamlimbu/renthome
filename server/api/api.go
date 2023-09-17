@@ -83,7 +83,7 @@ func NewRouter(api *APIController, adminHostURL, publicHostURL, agentHostURL str
 
 		r.Post("/files/upload", WithError(WithUser(api, api.FileUpload)))
 
-		r.Get("/locations", WithError(api.GetLocations))
+		r.Post("/locations", WithError(api.GetLocations))
 	})
 
 	return r

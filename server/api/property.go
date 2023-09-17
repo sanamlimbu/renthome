@@ -35,8 +35,8 @@ type Filter struct {
 	HasDishwasher     bool   `json:"has_dishwasher"`
 }
 type GetPropertiesRequest struct {
-	Search string `json:"search"`
-	Filter Filter `json:"filter"`
+	Search []string `json:"search"`
+	Filter Filter   `json:"filter"`
 }
 
 func (api *APIController) GetProperties(w http.ResponseWriter, r *http.Request) (int, error) {

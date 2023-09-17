@@ -6,11 +6,15 @@ import (
 	"net/http"
 	"renthome/boiler"
 	"strconv"
-	"strings"
 
 	"github.com/ninja-software/terror/v2"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
+
+type GetLocationsRequest struct {
+	SearchTerm  string   `json:"search_term"`
+	IgnoreTerms []string `json:"ignore_terms"`
+}
 
 type GetLocationsResponse struct {
 	Locations []string `json:"locations"`
@@ -22,17 +26,24 @@ func (api *APIController) GetLocations(w http.ResponseWriter, r *http.Request) (
 	isPostcodeSearch := false
 	isTotalResultLessThanSeven := false
 
-	searchTerm := strings.ToLower(r.URL.Query().Get("search_term"))
-	if searchTerm == "" {
+	req := &GetLocationsRequest{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		return http.StatusBadRequest, terror.Error(err, ErrDecodeJSONPayload)
+	}
+
+	if req.SearchTerm == "" {
 		return http.StatusBadRequest, fmt.Errorf("no search term provided")
 	}
 
-	if _, err := strconv.Atoi(searchTerm); err == nil {
+	if _, err := strconv.Atoi(req.SearchTerm); err == nil {
 		isPostcodeSearch = true
 	}
 
 	if isPostcodeSearch {
-		locations, err := boiler.Locations(qm.Where("postcode LIKE ?", fmt.Sprintf("%s%%", searchTerm)),
+		locations, err := boiler.Locations(qm.Where("postcode LIKE ?", fmt.Sprintf("%s%%", req.SearchTerm)),
+			boiler.LocationWhere.Postcode.NIN(req.IgnoreTerms),
+			boiler.LocationWhere.Description.NIN(req.IgnoreTerms),
 			qm.Limit(7)).All(api.Conn)
 		if err != nil {
 			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
@@ -46,7 +57,9 @@ func (api *APIController) GetLocations(w http.ResponseWriter, r *http.Request) (
 			isTotalResultLessThanSeven = true
 		}
 	} else {
-		locations, err := boiler.Locations(qm.Where("description ILIKE ?", fmt.Sprintf("%%%s%%", searchTerm)),
+		locations, err := boiler.Locations(qm.Where("description ILIKE ?", fmt.Sprintf("%%%s%%", req.SearchTerm)),
+			boiler.LocationWhere.Postcode.NIN(req.IgnoreTerms),
+			boiler.LocationWhere.Description.NIN(req.IgnoreTerms),
 			qm.Limit(7)).All(api.Conn)
 		if err != nil {
 			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
@@ -58,7 +71,9 @@ func (api *APIController) GetLocations(w http.ResponseWriter, r *http.Request) (
 	}
 
 	if isTotalResultLessThanSeven {
-		locations, err := boiler.Locations(qm.Where("description ILIKE ?", fmt.Sprintf("%%%s%%", searchTerm)),
+		locations, err := boiler.Locations(qm.Where("description ILIKE ?", fmt.Sprintf("%%%s%%", req.SearchTerm)),
+			boiler.LocationWhere.Postcode.NIN(req.IgnoreTerms),
+			boiler.LocationWhere.Description.NIN(req.IgnoreTerms),
 			qm.Limit(7)).All(api.Conn)
 		if err != nil {
 			return http.StatusInternalServerError, terror.Error(err, ErrSomethingWentWrong)
